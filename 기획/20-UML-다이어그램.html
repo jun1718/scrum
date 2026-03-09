@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UML 다이어그램 - 데일리 슈크럼(SUPER scrum)</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+  :root {
+    --bg: #0d1117;
+    --card: #161b22;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text-muted: #8b949e;
+    --accent: #58a6ff;
+    --accent2: #3fb950;
+    --accent3: #d2a8ff;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(90deg, var(--accent), var(--accent3));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  h1 + p { color: var(--text-muted); margin-bottom: 2rem; }
+  .toc {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem 2rem;
+    margin-bottom: 2rem;
+    columns: 2;
+    column-gap: 2rem;
+  }
+  .toc h2 { font-size: 1rem; color: var(--accent); margin-bottom: 0.75rem; column-span: all; }
+  .toc a {
+    display: block;
+    color: var(--text);
+    text-decoration: none;
+    padding: 0.25rem 0;
+    font-size: 0.95rem;
+    break-inside: avoid;
+  }
+  .toc a:hover { color: var(--accent); }
+  .toc a span { color: var(--text-muted); margin-right: 0.5rem; }
+
+  section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+  }
+  section > h2 {
+    padding: 1.25rem 1.5rem;
+    font-size: 1.25rem;
+    border-bottom: 1px solid var(--border);
+  }
+  section > h2 .badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 99px;
+    margin-left: 0.5rem;
+    vertical-align: middle;
+    font-weight: 500;
+  }
+  .badge-erd { background: #1f6feb33; color: var(--accent); }
+  .badge-seq { background: #3fb95033; color: var(--accent2); }
+  .badge-flow { background: #d2a8ff33; color: var(--accent3); }
+  .badge-state { background: #f8514933; color: #f85149; }
+
+  section > .desc {
+    padding: 0.75rem 1.5rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+  .diagram-wrap {
+    padding: 1.5rem;
+    overflow-x: auto;
+    display: flex;
+    justify-content: center;
+  }
+  .diagram-wrap .mermaid {
+    min-width: 600px;
+  }
+
+  details {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+  }
+  details > summary {
+    padding: 1.25rem 1.5rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s;
+    list-style: none;
+  }
+  details > summary::-webkit-details-marker { display: none; }
+  details > summary::before {
+    content: '>';
+    display: inline-block;
+    margin-right: 0.75rem;
+    transition: transform 0.2s;
+    color: var(--text-muted);
+    font-family: monospace;
+  }
+  details[open] > summary::before { transform: rotate(90deg); }
+  details[open] > summary { border-bottom: 1px solid var(--border); }
+  details > .desc {
+    padding: 0.75rem 1.5rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+
+  /* Summary table */
+  .summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+  }
+  .summary-table th, .summary-table td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.9rem;
+  }
+  .summary-table th {
+    color: var(--accent);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .summary-table td:first-child { font-weight: 600; white-space: nowrap; }
+
+  @media (max-width: 768px) {
+    body { padding: 1rem; }
+    .toc { columns: 1; }
+    .diagram-wrap { padding: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<h1>UML 다이어그램 - 데일리 슈크럼(SUPER scrum)</h1>
+<p>전체 시스템 흐름을 한눈에 파악할 수 있도록 정리한 UML 문서입니다.</p>
+
+<nav class="toc">
+  <h2>목차</h2>
+  <a href="#erd"><span>1.</span> ERD (Entity Relationship Diagram)</a>
+  <a href="#usecase"><span>2.</span> 유스케이스 다이어그램</a>
+  <a href="#arch"><span>3.</span> 시스템 아키텍처</a>
+  <a href="#auth"><span>4.</span> 인증 시퀀스</a>
+  <a href="#daily"><span>5.</span> 데일리 스크럼 작성 시퀀스</a>
+  <a href="#batch-weekly"><span>6-1.</span> 주간 보고 배치 시퀀스</a>
+  <a href="#batch-monthly"><span>6-2.</span> 월간 보고 배치 시퀀스</a>
+  <a href="#ai"><span>7.</span> AI 요약 생성 시퀀스</a>
+  <a href="#state"><span>8.</span> 보고서 파이프라인 상태</a>
+  <a href="#nav"><span>9.</span> 페이지 네비게이션</a>
+  <a href="#share"><span>10.</span> 팀 공유 시퀀스</a>
+  <a href="#tag"><span>+</span> 태그 계층 구조</a>
+</nav>
+
+<!-- 1. ERD -->
+<section id="erd">
+  <h2>1. ERD <span class="badge badge-erd">Entity Relationship</span></h2>
+  <p class="desc">7개 테이블 간의 관계 - tag 계층, report 타입 분류, UNIQUE 제약</p>
+  <div class="diagram-wrap">
+    <pre class="mermaid">
+erDiagram
+    team {
+        BIGINT team_id PK
+        VARCHAR team_name
+        TINYINT week_start_day "0=일 ~ 6=토"
+        TINYINT week_end_day
+        DATETIME created_at
+        BIGINT created_member_id FK
+    }
+
+    member {
+        BIGINT member_id PK
+        BIGINT team_id FK "NULL 허용"
+        VARCHAR dooray_member_id "Dooray ID"
+        VARCHAR member_name
+    }
+
+    tag {
+        BIGINT tag_id PK
+        BIGINT team_id FK
+        BIGINT parent_tag_id FK "NULL이면 monthly"
+        VARCHAR tag_name
+        VARCHAR type "weekly or monthly"
+    }
+
+    report {
+        BIGINT report_id PK
+        BIGINT member_id FK
+        DATE sta_date
+        DATE end_date
+        VARCHAR type "daily weekly monthly review"
+    }
+
+    report_detail {
+        BIGINT report_detail_id PK
+        BIGINT report_id FK
+        BIGINT tag_id FK
+        BIGINT task_id "UK report_id task_id"
+        VARCHAR task_title
+        VARCHAR task_link
+        TEXT done
+        DECIMAL work_hours
+        TEXT performance "NULL 허용"
+    }
+
+    peer_report {
+        BIGINT peer_report_id PK
+        BIGINT report_id FK "daily만"
+        BIGINT peer_member_id FK "UK report_id peer_member_id"
+        TEXT content
+    }
+
+    report_tag {
+        BIGINT report_tag_id PK
+        BIGINT report_id FK
+        BIGINT tag_id FK
+        DECIMAL work_hours "태그별 합산"
+        VARCHAR type "weekly monthly review"
+        TEXT ai_summary_content "monthly review만"
+    }
+
+    team ||--o{ member : "1팀 = N멤버"
+    team ||--o{ tag : "1팀 = N태그"
+    tag ||--o| tag : "월간 - 주간 parent"
+    member ||--o{ report : "1멤버 = N보고"
+    report ||--o{ report_detail : "1보고 = N상세"
+    report ||--o{ peer_report : "1보고 = N동료기록"
+    report ||--o{ report_tag : "1보고 = N태그집계"
+    tag ||--o{ report_detail : "1태그 = N상세"
+    tag ||--o{ report_tag : "1태그 = N집계"
+    member ||--o{ peer_report : "동료 참조"
+    </pre>
+  </div>
+</section>
+
+<!-- 2. 유스케이스 -->
+<details id="usecase">
+  <summary>2. 유스케이스 다이어그램 <span class="badge badge-flow">Use Case</span></summary>
+  <p class="desc">액터(팀장, 팀원, 배치, AI)별 31개 기능 매핑</p>
+  <div class="diagram-wrap">
+    <pre class="mermaid">
+graph TB
+    subgraph Actors
+        TL["팀장"]
+        TM["팀원 - 공통"]
+        BATCH["배치 스케줄러"]
+        AI["Claude AI"]
+    end
+
+    subgraph "팀 관리"
+        T1["T-1 팀 생성"]
+        T2["T-2 주간 시작/종료 요일 설정"]
+        T3["T-3 주간 태그 관리"]
+        T4["T-4 월간 태그 관리"]
+    end
+
+    subgraph "팀 참여"
+        T5["T-5 팀 검색"]
+        T6["T-6 팀 배정"]
+    end
+
+    subgraph "데일리 스크럼"
+        D1["D-1 Dooray 업무 자동 로드"]
+        D2["D-2 데일리 스크럼 저장"]
+        D3["D-3 행 추가"]
+        D4["D-4 행 삭제"]
+        D5["D-5 주간 태그 선택"]
+        D6["D-6 데일리 스크럼 수정"]
+        D7["D-7 데일리 스크럼 삭제"]
+        D8["D-8 동료 협업 기록 저장"]
+        D9["D-9 동료 협업 기록 수정/삭제"]
+    end
+
+    subgraph "보고서 조회/관리"
+        R1["R-1 일간 보고 목록"]
+        R2["R-2 주간 보고 목록"]
+        R3["R-3 월간 보고 + AI 요약"]
+        R4["R-4 성과 보고 + AI 요약"]
+        R5["R-5 주간 보고 수정/삭제"]
+        R6["R-6 월간 보고 수정/삭제/재생성"]
+        R7["R-7 성과 보고 생성"]
+        R8["R-8 성과 보고 수정/삭제"]
+    end
+
+    subgraph "팀 공유"
+        S1["S-1 팀 일간 보고"]
+        S2["S-2 팀 주간 보고"]
+        S3["S-3 팀 월간 보고"]
+        S4["S-4 가동률 산출"]
+    end
+
+    subgraph "배치 / AI"
+        B1["B-1 주간 보고 자동 생성 3AM"]
+        B2["B-2 월간 보고 자동 생성 25일 5AM"]
+        A1["A-1 월간 AI 요약 200자"]
+        A2["A-2 성과 AI 요약 500자"]
+    end
+
+    TL --> T1 & T2 & T3 & T4
+    TM --> T5 & T6
+    TM --> D1 & D2 & D3 & D4 & D5 & D6 & D7 & D8 & D9
+    TM --> R1 & R2 & R3 & R4 & R5 & R6 & R7 & R8
+    TM --> S1 & S2 & S3 & S4
+    BATCH --> B1 & B2
+    AI --> A1 & A2
+    B2 -.->|트리거| A1
+    R7 -.->|트리거| A2
+    </pre>
+  </div>
+</details>
+
+<!-- 3. 시스템 아키텍처 -->
+<section id="arch">
+  <h2>3. 시스템 아키텍처 <span class="badge badge-flow">Component</span></h2>
+  <p class="desc">Controller - Service - Mapper 레이어 + 외부 연동 (Dooray, Claude, MySQL)</p>
+  <div class="diagram-wrap">
+    <pre class="mermaid">
+graph TB
+    subgraph "Frontend - React + TailwindCSS"
+        UI["SPA"]
+    end
+
+    UI --> |"JWT in Header"| API_GW
+
+    subgraph "Backend - Spring Boot"
+        API_GW["REST API Layer"]
+
+        subgraph "Controllers"
+            AUTH_C["AuthController"]
+            TEAM_C["TeamController"]
+            REPORT_C["ReportController"]
+            SHARE_C["TeamShareController"]
+            DOORAY_C["DoorayProxyController"]
+        end
+
+        subgraph "Services"
+            AUTH_S["AuthService"]
+            TEAM_S["TeamService"]
+            TAG_S["TagService"]
+            REPORT_S["ReportService"]
+            BATCH_S["BatchService"]
+            AI_S["AISummaryService"]
+            DOORAY_S["DoorayService"]
+        end
+
+        subgraph "Infrastructure"
+            JWT_F["JWT 커스텀 필터"]
+            MYBATIS["MyBatis Mapper"]
+            SCHEDULER["Spring Scheduler"]
+        end
+
+        API_GW --> AUTH_C & TEAM_C & REPORT_C & SHARE_C & DOORAY_C
+        AUTH_C --> AUTH_S
+        TEAM_C --> TEAM_S & TAG_S
+        REPORT_C --> REPORT_S
+        SHARE_C --> REPORT_S
+        DOORAY_C --> DOORAY_S
+        REPORT_S --> AI_S
+        SCHEDULER --> BATCH_S
+        BATCH_S --> REPORT_S
+        AUTH_S --> JWT_F
+        REPORT_S & TEAM_S & TAG_S & AUTH_S --> MYBATIS
+    end
+
+    subgraph "External"
+        DOORAY_API["Dooray API"]
+        CLAUDE_API["Claude API"]
+        MYSQL[("MySQL DB")]
+    end
+
+    DOORAY_S --> DOORAY_API
+    AI_S --> CLAUDE_API
+    MYBATIS --> MYSQL
+    AUTH_S --> DOORAY_API
+    </pre>
+  </div>
+</section>
+
+<!-- 4. 인증 -->
+<section id="auth">
+  <h2>4. 인증 시퀀스 <span class="badge badge-seq">Sequence</span></h2>
+  <p class="desc">Dooray 토큰 -> JWT 발급 -> 커스텀 필터 검증</p>
+  <div class="diagram-wrap">
+    <pre class="mermaid">
+sequenceDiagram
+    actor User as 사용자
+    participant FE as Frontend
+    participant BE as Backend
+    participant Dooray as Dooray API
+    participant DB as MySQL
+
+    User->>FE: Dooray API 토큰 입력
+    FE->>BE: POST /login (doorayApiToken)
+
+    BE->>Dooray: GET /common/v1/members/me
+    Note right of BE: Header: dooray-api token
+    Dooray-->>BE: 200 OK (id, name, userCode)
+
+    alt 신규 사용자
+        BE->>DB: SELECT member (dooray_member_id)
+        DB-->>BE: 없음
+        BE->>DB: INSERT member
+        DB-->>BE: OK
+    else 기존 사용자
+        BE->>DB: SELECT member (dooray_member_id)
+        DB-->>BE: Member 반환
+    end
+
+    BE->>BE: JWT 생성 (memberId, encryptedToken)
+    BE-->>FE: 200 OK (jwt, memberInfo)
+    FE->>FE: JWT 저장
+
+    Note over FE,BE: 이후 모든 요청
+
+    FE->>BE: Authorization: Bearer jwt
+    BE->>BE: JWT 커스텀 필터 검증
+    alt 유효
+        BE-->>FE: 정상 응답
+    else 만료/무효
+        BE-->>FE: 401 Unauthorized
+    end
+    </pre>
+  </div>
+</section>
+
+<!-- 5. 데일리 스크럼 작성 -->
+<details id="daily">
+  <summary>5. 데일리 스크럼 작성 시퀀스 <span class="badge badge-seq">Sequence</span></summary>
+  <p class="desc">Dooray 업무 로드 -> 사용자 입력 -> 저장 (report + detail + peer)</p>
+  <div class="diagram-wrap">
+    <pre class="mermaid">
+sequenceDiagram
+    actor User as 사용자
+    participant FE as Frontend
+    participant BE as Backend
+    participant Dooray as Dooray API
+    participant DB as MySQL
+
+    User->>FE: 데일리 스크럼 탭 클릭
+
+    FE->>BE: GET /dooray/tasks
+    BE->>BE: JWT에서 doorayToken 복호화
+    BE->>Dooray: GET /project/v1/tasks (멘션/댓글/담당)
+    Dooray-->>BE: 업무 목록
+    BE-->>FE: 가공된 업무 목록
+
+    FE->>FE: 업무 목록 테이블 렌더링
+
+    loop 각 업무 행 입력
+        User->>FE: done 입력 [필수]
+        User->>FE: workHours 입력
+        User->>FE: performance 입력 [선택]
+        User->>FE: 주간 태그 선택 [필수]
+        FE->>FE: 월간 태그 자동 매핑
+    end
+
+    opt 수동 행 추가
+        User->>FE: + 버튼 클릭
+        FE->>FE: 빈 행 추가
+        User->>FE: taskTitle, taskLink 입력
+    end
+
+    opt 동료 협업 기록
+        User->>FE: 동료 협업 버튼
+        User->>FE: 팀원 선택 + 내용 입력
+    end
+
+    User->>FE: 저장 버튼 클릭
+
+    FE->>BE: POST /reports/daily
+    Note right of FE: staDate, endDate, reportDetails[], peerReports[]
+
+    BE->>DB: INSERT report (type=daily)
+    BE->>DB: INSERT report_detail x N
+    Note right of BE: UNIQUE check: reportId + taskId
+    opt 동료 기록 있으면
+        BE->>DB: INSERT peer_report x N
+        Note right of BE: UNIQUE check: reportId + peerMemberId
+    end
+    DB-->>BE: OK
+
+    BE-->>FE: 201 Created
+    FE-->>User: 저장 완료
+    </pre>
+  </div>
+</details>
+
+<!-- 6-1. 주간 배치 -->
+<details id="batch-weekly">
+  <summary>6-1. 주간 보고 자동 생성 - 배치 <span class="badge badge-seq">Sequence</span></summary>
+  <p class="desc">매일 3AM - weekStartDay 해당 팀만, 팀원 단위 개별 트랜잭션</p>
+  <div class="diagram-wrap">
+    <pre class="mermaid">
+sequenceDiagram
+    participant Scheduler as Spring Scheduler (매일 3AM)
+    participant Batch as BatchService
+    participant DB as MySQL
+
+    Scheduler->>Batch: triggerWeeklyGeneration()
+
+    Batch->>DB: SELECT team WHERE weekStartDay = 오늘 요일
+    DB-->>Batch: 대상 팀 목록
+
+    loop 각 팀
+        Batch->>DB: SELECT member WHERE teamId
+        DB-->>Batch: 팀원 목록
+
+        loop 각 팀원 (개별 트랜잭션)
+            Batch->>DB: SELECT report + detail (daily, 지난주간)
+            DB-->>Batch: 일간 보고 상세
+
+            Batch->>Batch: 태그별 그룹핑
+            Batch->>Batch: done 합치기 (줄바꿈)
+            Batch->>Batch: workHours 합산
+            Batch->>Batch: 중복 업무 제거
+
+            Batch->>DB: INSERT report (type=weekly)
+            Batch->>DB: INSERT report_detail x N
+            Batch->>DB: INSERT report_tag x N
+            DB-->>Batch: OK
+        end
+    end
+
+    Note over Scheduler,DB: 팀원 단위 개별 트랜잭션 - 1명 실패해도 나머지 정상
+    </pre>
+  </div>
+</details>
+
+<!-- 6-2. 월간 배치 -->
+<details id="batch-monthly">
+  <summary>6-2. 월간 보고 자동 생성 - 배치 <span class="badge badge-seq">Sequence</span></summary>
+  <p class="desc">매월 25일 5AM - 1일~25일 집계 + AI 요약 200자</p>
+  <div class="diagram-wrap">
+    <pre class="mermaid">
+sequenceDiagram
+    participant Scheduler as Spring Scheduler (25일 5AM)
+    participant Batch as BatchService
+    participant AI as AISummaryService
+    participant Claude as Claude API
+    participant DB as MySQL
+
+    Scheduler->>Batch: triggerMonthlyGeneration()
+
+    Batch->>DB: SELECT members (팀 배정된)
+    DB-->>Batch: 전체 팀원
+
+    loop 각 팀원 (개별 트랜잭션)
+        Batch->>DB: SELECT report + detail (daily, 1일~25일)
+        DB-->>Batch: 일간 보고 상세
+
+        Batch->>Batch: 태그별 그룹핑 + 집계
+
+        Batch->>DB: INSERT report (type=monthly)
+        Batch->>DB: INSERT report_detail x N
+        Batch->>DB: INSERT report_tag x N
+
+        loop 각 태그
+            Batch->>AI: 요약 요청 (done, workHours, performance)
+            AI->>Claude: 프롬프트: 약 200자 요약
+            Claude-->>AI: 요약 텍스트
+            AI-->>Batch: 결과
+            Batch->>DB: UPDATE report_tag (ai_summary_content)
+        end
+
+        DB-->>Batch: OK
+    end
+    </pre>
+  </div>
+</details>
+
+<!-- 7. AI 요약 -->
+<section id="ai">
+  <h2>7. AI 요약 생성 시퀀스 (성과 보고) <span class="badge badge-seq">Sequence</span></h2>
+  <p class="desc">사용자 트리거 - 기간 겹침 검증 후 태그별 500자 성과 요약</p>
+  <div class="diagram-wrap">
+    <pre class="mermaid">
+sequenceDiagram
+    actor User as 사용자
+    participant FE as Frontend
+    participant BE as Backend
+    participant AI as AISummaryService
+    participant Claude as Claude API
+    participant DB as MySQL
+
+    User->>FE: 성과 보고 생성 (기간 지정)
+    FE->>BE: POST /reports/review (staDate, endDate)
+
+    BE->>DB: SELECT report (type=review, 기간 겹침 확인)
+    DB-->>BE: 겹침 없음
+
+    BE->>DB: SELECT report_detail (daily, 해당 기간)
+    DB-->>BE: 일간 보고 상세
+
+    BE->>BE: 태그별 그룹핑 (performance 중심)
+
+    BE->>DB: INSERT report (type=review)
+    BE->>DB: INSERT report_detail x N
+    BE->>DB: INSERT report_tag x N
+
+    loop 각 태그별
+        BE->>AI: 요약 요청 (performance 중심)
+        AI->>Claude: 프롬프트: 성과 약 500자 요약
+        Claude-->>AI: 요약 텍스트
+        AI-->>BE: 결과
+        BE->>DB: UPDATE report_tag (ai_summary_content)
+    end
+
+    BE-->>FE: 201 Created
+    FE-->>User: 성과 보고 생성 완료
+    </pre>
+  </div>
+</section>
+
+<!-- 8. 상태 다이어그램 -->
+<section id="state">
+  <h2>8. 보고서 파이프라인 상태 <span class="badge badge-state">State</span></h2>
+  <p class="desc">일간 -> 주간/월간/성과 보고로 이어지는 데이터 흐름</p>
+  <div class="diagram-wrap">
+    <pre class="mermaid">
+stateDiagram-v2
+    [*] --> DoorayTask: Dooray 업무 로드
+
+    DoorayTask --> DailyReport: 사용자 입력 (done, workHours, tag)
+
+    DailyReport --> DailyReport: 수정/삭제 가능
+
+    DailyReport --> WeeklyReport: 배치 매일 3AM (weekStartDay 팀)
+
+    DailyReport --> MonthlyReport: 배치 25일 5AM (1~25일 집계)
+
+    DailyReport --> ReviewReport: 사용자 트리거 (기간 지정)
+
+    state WeeklyReport {
+        [*] --> 태그별그룹W
+        태그별그룹W --> done합치기W
+        done합치기W --> workHours합산W
+        workHours합산W --> 중복제거W
+        중복제거W --> reportTag생성W
+        reportTag생성W --> [*]
+    }
+
+    state MonthlyReport {
+        [*] --> 태그별그룹M
+        태그별그룹M --> done합치기M
+        done합치기M --> workHours합산M
+        workHours합산M --> 중복제거M
+        중복제거M --> reportTag생성M
+        reportTag생성M --> AI요약200자
+        AI요약200자 --> [*]
+    }
+
+    state ReviewReport {
+        [*] --> 기간겹침검증
+        기간겹침검증 --> 태그별그룹R
+        태그별그룹R --> performance추출
+        performance추출 --> reportTag생성R
+        reportTag생성R --> AI요약500자
+        AI요약500자 --> [*]
+    }
+
+    WeeklyReport --> 수정가능W: 사용자 편집
+    MonthlyReport --> 수정가능M: 사용자 편집
+    ReviewReport --> 수정가능R: 사용자 편집
+
+    수정가능W --> [*]
+    수정가능M --> [*]
+    수정가능R --> [*]
+    </pre>
+  </div>
+</section>
+
+<!-- 9. 페이지 네비게이션 -->
+<details id="nav">
+  <summary>9. 페이지 네비게이션 플로우차트 <span class="badge badge-flow">Flowchart</span></summary>
+  <p class="desc">10개 페이지 이동 흐름 - 팀 미배정 분기, 탭 구조, 기능 매핑</p>
+  <div class="diagram-wrap">
+    <pre class="mermaid">
+flowchart TD
+    START(["사용자 접속"]) --> LOGIN["POST /login - Dooray 토큰 입력"]
+    LOGIN --> CHECK_TEAM{"팀 배정 여부?"}
+
+    CHECK_TEAM -->|미배정| PAGE2["팀 배정 페이지 /team/assign\nT-5 팀 검색\nT-6 팀 배정"]
+    PAGE2 --> MAIN
+
+    CHECK_TEAM -->|배정됨| MAIN
+
+    MAIN["메인 데일리 스크럼 /\nD-1 Dooray 업무 로드\nD-2 스크럼 저장\nD-3,4 행 추가/삭제\nD-5 태그 선택\nD-8,9 동료 기록"]
+
+    subgraph LEFT_MENU["좌측 메뉴"]
+        TEAM_MGMT["팀 관리 /team/manage"]
+        MY_REPORT["내 보고서"]
+        TEAM_SHARE["팀 공유"]
+    end
+
+    MAIN --> LEFT_MENU
+
+    TEAM_MGMT --> PAGE1["T-1 팀 생성\nT-2 일정 설정\nT-3,4 태그 관리"]
+
+    MY_REPORT --> TAB_GROUP
+
+    subgraph TAB_GROUP["내 보고서 탭"]
+        TAB1["데일리 스크럼 작성 - 기본 탭"]
+        TAB2["일간 보고 /reports/daily\nR-1 목록, D-6 수정, D-7 삭제"]
+        TAB3["주간 보고 /reports/weekly\nR-2 목록, R-5 수정/삭제\n자동 + 수동 생성"]
+        TAB4["월간 보고 GRM /reports/monthly\nR-3 목록, R-6 수정/삭제/재생성\nA-1 AI 요약 200자"]
+        TAB5["성과 보고 /reports/review\nR-4 목록, R-7 생성\nR-8 수정/삭제\nA-2 AI 요약 500자"]
+    end
+
+    TAB1 --> MAIN
+
+    TEAM_SHARE --> SHARE_TABS
+
+    subgraph SHARE_TABS["팀 공유 탭"]
+        SHARE_D["팀 일간 S-1 /team/share/daily"]
+        SHARE_W["팀 주간 S-2 /team/share/weekly"]
+        SHARE_M["팀 월간 S-3 /team/share/monthly"]
+    end
+
+    SHARE_D & SHARE_W & SHARE_M --> UTIL["S-4 가동률 산출\nworkHours / 일총시간 x 100"]
+
+    style MAIN fill:#1f6feb,color:#fff
+    style LOGIN fill:#d29922,color:#fff
+    style PAGE2 fill:#d29922,color:#fff
+    style UTIL fill:#8957e5,color:#fff
+    </pre>
+  </div>
+</details>
+
+<!-- 10. 팀 공유 -->
+<section id="share">
+  <h2>10. 팀 공유 시퀀스 <span class="badge badge-seq">Sequence</span></h2>
+  <p class="desc">팀원 보고서 조회 시 민감 정보(performance, peer) 필터링 + 가동률 산출</p>
+  <div class="diagram-wrap">
+    <pre class="mermaid">
+sequenceDiagram
+    actor User as 팀원
+    participant FE as Frontend (팀 공유)
+    participant BE as Backend
+    participant DB as MySQL
+
+    User->>FE: 팀 공유 탭 클릭 (일간/주간/월간)
+    FE->>BE: GET /teams/{teamId}/reports/{type}?date=
+
+    BE->>BE: JWT에서 memberId, teamId 추출
+
+    BE->>DB: SELECT report + detail (팀, 타입, 날짜)
+    DB-->>BE: 팀원 보고 목록
+
+    BE->>BE: 민감 정보 필터링
+    Note right of BE: performance 제외, peer_report 제외, done/workHours/tag 포함
+
+    BE->>BE: 가동률 산출
+    Note right of BE: utilization = workHours / 일총시간 x 100
+
+    BE-->>FE: 필터링된 보고 + 가동률(%)
+
+    FE->>FE: 팀원별 보고서 렌더링
+    FE-->>User: 팀 보고 화면 (민감 정보 미포함)
+    </pre>
+  </div>
+</section>
+
+<!-- 부록: 태그 계층 -->
+<section id="tag">
+  <h2>부록: 태그 계층 구조 <span class="badge badge-flow">Structure</span></h2>
+  <p class="desc">월간 태그(parentTagId=NULL) -> 주간 태그(parentTagId) 계층, 데일리 입력 시 자동 매핑</p>
+  <div class="diagram-wrap">
+    <pre class="mermaid">
+graph TD
+    subgraph "팀 A의 태그 구조"
+        M1["월간: 프로젝트 A\nparentTagId = NULL\ntype = monthly"]
+        M2["월간: 프로젝트 B\nparentTagId = NULL\ntype = monthly"]
+
+        W1["주간: 기능개발\nparent = 프로젝트 A"]
+        W2["주간: 버그수정\nparent = 프로젝트 A"]
+        W3["주간: 설계\nparent = 프로젝트 B"]
+        W4["주간: 테스트\nparent = 프로젝트 B"]
+
+        M1 --> W1
+        M1 --> W2
+        M2 --> W3
+        M2 --> W4
+    end
+
+    subgraph "데일리 스크럼 입력 시"
+        INPUT["사용자가 주간 태그 선택 (필수)"]
+        AUTO["월간 태그 자동 매핑 (parentTagId 기반)"]
+        INPUT --> AUTO
+    end
+
+    W1 -.-> INPUT
+    W2 -.-> INPUT
+    W3 -.-> INPUT
+    W4 -.-> INPUT
+    </pre>
+  </div>
+</section>
+
+<!-- 요약 테이블 -->
+<section>
+  <h2>다이어그램 요약</h2>
+  <div style="padding: 1rem 1.5rem;">
+    <table class="summary-table">
+      <thead>
+        <tr><th>#</th><th>다이어그램</th><th>유형</th><th>핵심 포인트</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>1</td><td>ERD</td><td>ER</td><td>7개 테이블, tag 계층, UNIQUE 제약</td></tr>
+        <tr><td>2</td><td>유스케이스</td><td>Use Case</td><td>팀장/팀원/배치/AI 역할별 31개 기능</td></tr>
+        <tr><td>3</td><td>시스템 아키텍처</td><td>Component</td><td>No Spring Security, MyBatis, Dooray 프록시</td></tr>
+        <tr><td>4</td><td>인증 시퀀스</td><td>Sequence</td><td>Dooray 토큰 -> JWT -> 커스텀 필터</td></tr>
+        <tr><td>5</td><td>데일리 스크럼 작성</td><td>Sequence</td><td>Dooray 로드 -> 입력 -> report+detail+peer 저장</td></tr>
+        <tr><td>6-1</td><td>주간 배치</td><td>Sequence</td><td>매일 3AM, 팀원 개별 트랜잭션, 태그별 집계</td></tr>
+        <tr><td>6-2</td><td>월간 배치</td><td>Sequence</td><td>25일 5AM, AI 요약 200자</td></tr>
+        <tr><td>7</td><td>AI 요약 (성과)</td><td>Sequence</td><td>기간 겹침 검증, 태그별 500자 요약</td></tr>
+        <tr><td>8</td><td>보고서 파이프라인</td><td>State</td><td>daily -> weekly/monthly/review 데이터 흐름</td></tr>
+        <tr><td>9</td><td>페이지 네비게이션</td><td>Flowchart</td><td>10개 페이지, 팀 미배정 분기, 탭 구조</td></tr>
+        <tr><td>10</td><td>팀 공유</td><td>Sequence</td><td>performance/peer 제외, 가동률 산출</td></tr>
+        <tr><td>+</td><td>태그 계층</td><td>Structure</td><td>월간-주간 parent 관계, 자동 매핑</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'dark',
+    themeVariables: {
+      darkMode: true,
+      background: '#161b22',
+      primaryColor: '#1f6feb',
+      primaryTextColor: '#e6edf3',
+      primaryBorderColor: '#30363d',
+      lineColor: '#8b949e',
+      secondaryColor: '#21262d',
+      tertiaryColor: '#161b22',
+      noteBkgColor: '#1c2128',
+      noteTextColor: '#e6edf3',
+      noteBorderColor: '#30363d'
+    },
+    sequence: { mirrorActors: false },
+    flowchart: { curve: 'basis' }
+  });
+</script>
+
+</body>
+</html>

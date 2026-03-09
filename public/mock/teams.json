@@ -1,0 +1,10 @@
+[
+  {
+    "teamId": 1,
+    "teamName": "근태개발파트",
+    "weekStartDay": 3,
+    "weekEndDay": 2,
+    "createdAt": "2025-03-01T09:00:00.000Z",
+    "createdMemberId": 1
+  }
+]

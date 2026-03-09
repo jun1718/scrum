@@ -1,0 +1,8 @@
+[
+  { "tagId": 1, "teamId": 1, "parentTagId": 4, "tagName": "두레이 개발", "type": "weekly", "createdAt": "2025-03-01T09:00:00.000Z", "createdMemberId": 1 },
+  { "tagId": 2, "teamId": 1, "parentTagId": 5, "tagName": "슈크럼 개발", "type": "weekly", "createdAt": "2025-03-01T09:00:00.000Z", "createdMemberId": 1 },
+  { "tagId": 3, "teamId": 1, "parentTagId": 5, "tagName": "코드리뷰", "type": "weekly", "createdAt": "2025-03-01T09:00:00.000Z", "createdMemberId": 1 },
+  { "tagId": 4, "teamId": 1, "parentTagId": null, "tagName": "두레이", "type": "monthly", "createdAt": "2025-03-01T09:00:00.000Z", "createdMemberId": 1 },
+  { "tagId": 5, "teamId": 1, "parentTagId": null, "tagName": "슈크럼", "type": "monthly", "createdAt": "2025-03-01T09:00:00.000Z", "createdMemberId": 1 },
+  { "tagId": 6, "teamId": 1, "parentTagId": 4, "tagName": "기타", "type": "weekly", "createdAt": "2025-03-01T09:00:00.000Z", "createdMemberId": 1 }
+]
