@@ -1,6 +1,5 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Link } from 'react-router-dom'
 import { useMockData } from '@/hooks/useMockData'
 
 export function TeamAssignPage() {
@@ -26,7 +25,7 @@ export function TeamAssignPage() {
     navigate('/')
   }
 
-  // 이미 팀이 지정된 경우: 지정된 팀만 보여주기
+  // 이미 팀이 지정된 경우: 지정된 팀만 보여주기 (설정 링크 없음)
   if (assignedTeam) {
     return (
       <div className="bg-gray-50 min-h-full">
@@ -37,12 +36,6 @@ export function TeamAssignPage() {
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 max-w-md">
             <p className="text-sm text-gray-500 mb-1">현재 지정된 팀</p>
             <p className="text-lg font-medium text-gray-900">{assignedTeam.teamName}</p>
-            <Link
-              to="/team/manage"
-              className="inline-block mt-4 text-sm text-[#1e40af] hover:underline"
-            >
-              시작/종료일자·태그 설정 →
-            </Link>
           </div>
         </div>
       </div>

@@ -199,6 +199,7 @@ export function DailyScrumWritePage() {
               onChange={(next) => updateRow(i, next)}
               onRemove={() => removeRow(i)}
               getMonthlyTagName={getMonthlyTagName}
+              readOnlyTaskTitle
             />
           ))}
           <button

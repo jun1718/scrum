@@ -12,13 +12,17 @@ interface NavLinkItem {
 }
 
 function getNavItems(hasTeam: boolean): { section: string; links: NavLinkItem[] }[] {
-  const teamLinks: NavLinkItem[] = [
-    { to: '/team/create', label: '팀 생성하기' },
-    hasTeam
-      ? { to: '/team/assign', label: '지정된 팀 보여주기' }
-      : { to: '/team/assign', label: '팀 지정하기' },
-    { to: '/team/manage', label: '시작/종료일자·태그 설정' },
-  ]
+  const teamLinks: NavLinkItem[] = hasTeam
+    ? [
+        { to: '/team/create', label: '팀 생성하기' },
+        { to: '/team/members', label: '팀원 지정하기' },
+        { to: '/team/manage', label: '시작/종료일자·태그 설정' },
+      ]
+    : [
+        { to: '/team/create', label: '팀 생성하기' },
+        { to: '/team/assign', label: '팀 지정하기' },
+        { to: '/team/manage', label: '시작/종료일자·태그 설정' },
+      ]
   return [
     { section: '팀', links: teamLinks },
     { section: '보고', links: [

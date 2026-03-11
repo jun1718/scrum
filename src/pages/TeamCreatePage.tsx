@@ -1,18 +1,43 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { useMockData } from '@/hooks/useMockData'
 
 /**
- * 팀 생성하기 — 별도 메뉴. 새 팀 하나만 생성.
+ * 팀 생성하기 — 별도 메뉴. 1인당 1팀만 생성 가능.
+ * 이미 생성한 팀이 있으면 "이미 지정된 팀이 있습니다" + 팀명만 표시.
  */
 export function TeamCreatePage() {
-  const navigate = useNavigate()
-  const { teams, setTeams } = useMockData()
+  const {
+    teams,
+    setTeams,
+    currentMemberId,
+    currentTeamId,
+    setCurrentTeamId,
+    members,
+    setMembers,
+  } = useMockData()
   const [teamName, setTeamName] = useState('')
   const [error, setError] = useState('')
 
+  const myCreatedTeam = teams.find((t) => t.createdMemberId === currentMemberId)
+
+  const handleDelete = () => {
+    if (!myCreatedTeam) return
+    if (!confirm('현재 팀을 삭제하시겠습니까? 해당 팀에 속한 멤버의 팀 지정도 해제됩니다.')) return
+    const teamId = myCreatedTeam.teamId
+    setTeams(teams.filter((t) => t.teamId !== teamId))
+    setMembers(
+      members.map((m) => (m.teamId === teamId ? { ...m, teamId: null } : m))
+    )
+    if (currentTeamId === teamId) {
+      setCurrentTeamId(null)
+    }
+  }
+
   const handleCreate = () => {
     setError('')
+    if (myCreatedTeam) {
+      return
+    }
     const name = teamName.trim()
     if (!name) {
       setError('팀명을 입력하세요.')
@@ -27,11 +52,38 @@ export function TeamCreatePage() {
         weekStartDay: null,
         weekEndDay: null,
         createdAt: new Date().toISOString(),
-        createdMemberId: 1,
+        createdMemberId: currentMemberId,
       },
     ])
     setTeamName('')
-    navigate('/team/assign')
+  }
+
+  if (myCreatedTeam) {
+    return (
+      <div className="bg-gray-50 min-h-full">
+        <header className="h-14 bg-white border-b px-6 flex items-center">
+          <h1 className="font-semibold text-gray-900">팀 생성하기</h1>
+        </header>
+        <div className="p-6 max-w-md">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <p className="text-sm text-gray-500 mb-1">이미 지정된 팀이 있습니다.</p>
+            <p className="text-lg font-medium text-gray-900">
+              {myCreatedTeam.teamName}
+            </p>
+            <p className="text-xs text-gray-400 mt-3">
+              1인당 1팀만 생성 가능합니다.
+            </p>
+            <button
+              type="button"
+              onClick={handleDelete}
+              className="mt-4 px-4 py-2 border border-red-500 text-red-600 rounded-md text-sm hover:bg-red-50"
+            >
+              팀 삭제
+            </button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
