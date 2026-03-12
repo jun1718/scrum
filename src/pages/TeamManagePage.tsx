@@ -33,6 +33,7 @@ export function TeamManagePage() {
 
   const [weekStartDay, setWeekStartDay] = useState<number | null>(null)
   const [weekEndDay, setWeekEndDay] = useState<number | null>(null)
+  const [scheduleSaved, setScheduleSaved] = useState(false)
 
   const currentTeam = currentTeamId ? teams.find((t) => t.teamId === currentTeamId) : null
 
@@ -52,9 +53,11 @@ export function TeamManagePage() {
           : t
       )
     )
+    setScheduleSaved(true)
+    setTimeout(() => setScheduleSaved(false), 2000)
   }
 
-  const addWeeklyTag = () => {
+  const addWeeklyTag = (parentId: number) => {
     if (!currentTeamId) return
     const newId = Math.max(0, ...tags.map((t) => t.tagId)) + 1
     setTags([
@@ -62,7 +65,7 @@ export function TeamManagePage() {
       {
         tagId: newId,
         teamId: currentTeamId,
-        parentTagId: null,
+        parentTagId: parentId,
         tagName: '',
         type: 'weekly',
         createdAt: new Date().toISOString(),
@@ -164,14 +167,17 @@ export function TeamManagePage() {
               </select>
             </div>
             {isManager && (
-              <div className="flex items-end">
+              <div className="flex items-end gap-2">
                 <button
                   type="button"
                   onClick={handleSaveSchedule}
                   className="px-4 py-2 border border-gray-300 rounded-md text-sm hover:bg-gray-50"
                 >
-                  적용
+                  저장
                 </button>
+                {scheduleSaved && (
+                  <span className="text-sm text-green-600 pb-2 animate-fade-in">저장되었습니다</span>
+                )}
               </div>
             )}
           </div>
