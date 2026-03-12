@@ -33,7 +33,10 @@ export function TeamManagePage() {
 
   const [weekStartDay, setWeekStartDay] = useState<number | null>(null)
   const [weekEndDay, setWeekEndDay] = useState<number | null>(null)
-  const [scheduleSaved, setScheduleSaved] = useState(false)
+  const [scheduleEditing, setScheduleEditing] = useState(false)
+  const [scheduleError, setScheduleError] = useState('')
+  const [tagEditing, setTagEditing] = useState(false)
+  const [tagError, setTagError] = useState('')
 
   const currentTeam = currentTeamId ? teams.find((t) => t.teamId === currentTeamId) : null
 
@@ -46,6 +49,18 @@ export function TeamManagePage() {
 
   const handleSaveSchedule = () => {
     if (!currentTeam) return
+    setScheduleError('')
+    if (weekStartDay == null || weekEndDay == null) {
+      setScheduleError('시작 요일과 종료 요일을 모두 선택해주세요.')
+      return
+    }
+    // 시작~종료가 정확히 7일(일주일)인지 검증: 종료일은 시작일 전날이어야 함
+    const expectedEnd = (weekStartDay + 6) % 7
+    if (weekEndDay !== expectedEnd) {
+      const dayLabel = (d: number) => DAYS.find((v) => v.value === d)?.label
+      setScheduleError(`시작~종료가 일주일이 되어야 합니다. 시작이 ${dayLabel(weekStartDay)}이면 종료는 ${dayLabel(expectedEnd)}이어야 합니다.`)
+      return
+    }
     setTeams(
       teams.map((t) =>
         t.teamId === currentTeam.teamId
@@ -53,9 +68,10 @@ export function TeamManagePage() {
           : t
       )
     )
-    setScheduleSaved(true)
-    setTimeout(() => setScheduleSaved(false), 2000)
+    setScheduleEditing(false)
   }
+
+  const hasExistingSchedule = currentTeam?.weekStartDay != null && currentTeam?.weekEndDay != null
 
   const addWeeklyTag = (parentId: number) => {
     if (!currentTeamId) return
@@ -96,8 +112,45 @@ export function TeamManagePage() {
   }
 
   const removeTag = (tagId: number) => {
-    setTags(tags.filter((t) => t.tagId !== tagId))
+    const target = tags.find((t) => t.tagId === tagId)
+    if (target?.type === 'monthly') {
+      // 월간 태그 삭제 시 하위 주간 태그도 함께 삭제
+      setTags(tags.filter((t) => t.tagId !== tagId && t.parentTagId !== tagId))
+    } else {
+      setTags(tags.filter((t) => t.tagId !== tagId))
+    }
   }
+
+  const handleSaveTags = () => {
+    setTagError('')
+    // 밸리데이션: 월간 태그명 비어있는지
+    const emptyMonthly = monthlyTags.some((mt) => !mt.tagName.trim())
+    if (emptyMonthly) {
+      setTagError('월간 태그(ESM명)를 입력해주세요.')
+      return
+    }
+    // 밸리데이션: 월간 태그가 있는데 주간 태그가 하나도 없는 경우
+    for (const mt of monthlyTags) {
+      const children = weeklyTags.filter((wt) => wt.parentTagId === mt.tagId)
+      if (children.length === 0) {
+        setTagError(`"${mt.tagName}" 월간 태그에 주간 태그를 1개 이상 추가해주세요.`)
+        return
+      }
+      const emptyChild = children.some((wt) => !wt.tagName.trim())
+      if (emptyChild) {
+        setTagError(`"${mt.tagName}" 하위 주간 태그명을 입력해주세요.`)
+        return
+      }
+    }
+    // 밸리데이션: 주간 태그만 있고 월간 태그가 없는 경우 (방어)
+    if (monthlyTags.length === 0 && weeklyTags.length > 0) {
+      setTagError('월간 태그(ESM명)를 먼저 추가해주세요.')
+      return
+    }
+    setTagEditing(false)
+  }
+
+  const hasExistingTags = monthlyTags.length > 0
 
   // 내가 속한 팀이 없으면 팀 등록 유도
   if (!currentTeamId) {
@@ -136,7 +189,35 @@ export function TeamManagePage() {
         </div>
 
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <h2 className="text-sm font-medium text-gray-900 mb-3">주간 보고 시작/종료 요일</h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-medium text-gray-900">주간 보고 시작/종료 요일</h2>
+            {isManager && (
+              <div className="flex items-center gap-2">
+                {scheduleEditing ? (
+                  <button
+                    type="button"
+                    onClick={handleSaveSchedule}
+                    className="px-3 py-1.5 bg-[#1e40af] text-white rounded-md text-sm hover:bg-[#1d3a9a]"
+                  >
+                    저장
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => { setScheduleEditing(true); setScheduleError('') }}
+                    className="px-3 py-1.5 border border-gray-300 rounded-md text-sm hover:bg-gray-50"
+                  >
+                    {hasExistingSchedule ? '수정' : '설정'}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+          {scheduleError && (
+            <div className="mb-3 px-3 py-2 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-sm text-red-600">{scheduleError}</p>
+            </div>
+          )}
           <div className="flex gap-4 flex-wrap">
             <div>
               <label className="block text-xs text-gray-500 mb-1">시작 요일</label>
@@ -144,7 +225,7 @@ export function TeamManagePage() {
                 value={weekStartDay ?? ''}
                 onChange={(e) => setWeekStartDay(e.target.value ? Number(e.target.value) : null)}
                 className="border border-gray-300 rounded-md px-3 py-2 text-sm disabled:bg-gray-100 disabled:text-gray-500"
-                disabled={!isManager}
+                disabled={!scheduleEditing}
               >
                 <option value="">선택</option>
                 {DAYS.map((d) => (
@@ -158,7 +239,7 @@ export function TeamManagePage() {
                 value={weekEndDay ?? ''}
                 onChange={(e) => setWeekEndDay(e.target.value ? Number(e.target.value) : null)}
                 className="border border-gray-300 rounded-md px-3 py-2 text-sm disabled:bg-gray-100 disabled:text-gray-500"
-                disabled={!isManager}
+                disabled={!scheduleEditing}
               >
                 <option value="">선택</option>
                 {DAYS.map((d) => (
@@ -166,107 +247,115 @@ export function TeamManagePage() {
                 ))}
               </select>
             </div>
-            {isManager && (
-              <div className="flex items-end gap-2">
-                <button
-                  type="button"
-                  onClick={handleSaveSchedule}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-sm hover:bg-gray-50"
-                >
-                  저장
-                </button>
-                {scheduleSaved && (
-                  <span className="text-sm text-green-600 pb-2 animate-fade-in">저장되었습니다</span>
-                )}
-              </div>
-            )}
           </div>
         </div>
 
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <h2 className="text-sm font-medium text-gray-900 mb-3">태그 설정</h2>
-          <div className="space-y-4">
-            <div>
-              <p className="text-xs text-gray-500 mb-2">주간 태그 {isManager && '(추가/수정/삭제)'}</p>
-              {weeklyTags.map((t) => (
-                <div key={t.tagId} className="flex gap-2 items-center mb-2">
-                  <input
-                    type="text"
-                    value={t.tagName}
-                    onChange={(e) => updateTag(t.tagId, { tagName: e.target.value })}
-                    className="border border-gray-300 rounded-md px-3 py-2 text-sm flex-1 disabled:bg-gray-100 disabled:text-gray-500"
-                    placeholder="태그명"
-                    disabled={!isManager}
-                  />
-                  <select
-                    value={t.parentTagId ?? ''}
-                    onChange={(e) =>
-                      updateTag(t.tagId, {
-                        parentTagId: e.target.value ? Number(e.target.value) : null,
-                      })
-                    }
-                    className="border border-gray-300 rounded-md px-3 py-2 text-sm w-32 disabled:bg-gray-100 disabled:text-gray-500"
-                    disabled={!isManager}
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-medium text-gray-900">태그 설정</h2>
+            {isManager && (
+              <div className="flex items-center gap-2">
+                {tagEditing ? (
+                  <button
+                    type="button"
+                    onClick={handleSaveTags}
+                    className="px-3 py-1.5 bg-[#1e40af] text-white rounded-md text-sm hover:bg-[#1d3a9a]"
                   >
-                    <option value="">부모(월간) 없음</option>
-                    {monthlyTags.map((m) => (
-                      <option key={m.tagId} value={m.tagId}>{m.tagName}</option>
+                    저장
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => { setTagEditing(true); setTagError(''); if (!hasExistingTags) addMonthlyTag() }}
+                    className="px-3 py-1.5 border border-gray-300 rounded-md text-sm hover:bg-gray-50"
+                  >
+                    {hasExistingTags ? '수정' : '추가'}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+          <p className="text-xs text-gray-400 mb-3">월간 태그(ESM명) 안에 주간 태그가 트리 형태로 구성됩니다.</p>
+          {tagError && (
+            <div className="mb-3 px-3 py-2 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-sm text-red-600">{tagError}</p>
+            </div>
+          )}
+          <div className="space-y-3">
+            {monthlyTags.map((mt) => {
+              const children = weeklyTags.filter((wt) => wt.parentTagId === mt.tagId)
+              return (
+                <div key={mt.tagId} className="border border-gray-100 rounded-lg p-3 bg-gray-50">
+                  {/* 월간 태그 */}
+                  <div className="flex gap-2 items-center">
+                    <span className="text-xs text-gray-400 shrink-0 w-20">월간(ESM명)</span>
+                    <input
+                      type="text"
+                      value={mt.tagName}
+                      onChange={(e) => updateTag(mt.tagId, { tagName: e.target.value })}
+                      className="border border-gray-300 rounded-md px-2 py-1.5 text-sm w-40 disabled:bg-gray-100 disabled:text-gray-500"
+                      placeholder="월간 태그(ESM명)"
+                      disabled={!tagEditing}
+                    />
+                    {tagEditing && (
+                      <button
+                        type="button"
+                        onClick={() => removeTag(mt.tagId)}
+                        className="text-red-500 hover:underline text-xs"
+                      >
+                        삭제
+                      </button>
+                    )}
+                  </div>
+                  {/* 하위 주간 태그 */}
+                  <div className="ml-6 mt-2 space-y-1.5">
+                    {children.map((wt) => (
+                      <div key={wt.tagId} className="flex gap-2 items-center">
+                        <span className="text-xs text-gray-300 shrink-0">└</span>
+                        <input
+                          type="text"
+                          value={wt.tagName}
+                          onChange={(e) => updateTag(wt.tagId, { tagName: e.target.value })}
+                          className="border border-gray-200 rounded-md px-2 py-1 text-sm w-36 disabled:bg-gray-100 disabled:text-gray-500"
+                          placeholder="주간 태그명"
+                          disabled={!tagEditing}
+                        />
+                        {tagEditing && (
+                          <button
+                            type="button"
+                            onClick={() => removeTag(wt.tagId)}
+                            className="text-red-500 hover:underline text-xs"
+                          >
+                            삭제
+                          </button>
+                        )}
+                      </div>
                     ))}
-                  </select>
-                  {isManager && (
-                    <button
-                      type="button"
-                      onClick={() => removeTag(t.tagId)}
-                      className="text-red-600 hover:underline text-sm"
-                    >
-                      삭제
-                    </button>
-                  )}
+                    {tagEditing && (
+                      <button
+                        type="button"
+                        onClick={() => addWeeklyTag(mt.tagId)}
+                        className="text-xs text-blue-600 hover:underline ml-4"
+                      >
+                        + 주간 태그 추가
+                      </button>
+                    )}
+                  </div>
                 </div>
-              ))}
-              {isManager && (
-                <button
-                  type="button"
-                  onClick={addWeeklyTag}
-                  className="text-sm text-blue-600 hover:underline"
-                >
-                  + 주간 태그 추가
-                </button>
-              )}
-            </div>
-            <div>
-              <p className="text-xs text-gray-500 mb-2">월간 태그 {isManager && '(추가/수정/삭제)'}</p>
-              {monthlyTags.map((t) => (
-                <div key={t.tagId} className="flex gap-2 items-center mb-2">
-                  <input
-                    type="text"
-                    value={t.tagName}
-                    onChange={(e) => updateTag(t.tagId, { tagName: e.target.value })}
-                    className="border border-gray-300 rounded-md px-3 py-2 text-sm flex-1 disabled:bg-gray-100 disabled:text-gray-500"
-                    placeholder="태그명"
-                    disabled={!isManager}
-                  />
-                  {isManager && (
-                    <button
-                      type="button"
-                      onClick={() => removeTag(t.tagId)}
-                      className="text-red-600 hover:underline text-sm"
-                    >
-                      삭제
-                    </button>
-                  )}
-                </div>
-              ))}
-              {isManager && (
-                <button
-                  type="button"
-                  onClick={addMonthlyTag}
-                  className="text-sm text-blue-600 hover:underline"
-                >
-                  + 월간 태그 추가
-                </button>
-              )}
-            </div>
+              )
+            })}
+            {tagEditing && (
+              <button
+                type="button"
+                onClick={addMonthlyTag}
+                className="text-sm text-blue-600 hover:underline"
+              >
+                + 월간 태그(ESM명) 추가
+              </button>
+            )}
+            {!tagEditing && monthlyTags.length === 0 && (
+              <p className="text-sm text-gray-400">등록된 태그가 없습니다.</p>
+            )}
           </div>
         </div>
 
