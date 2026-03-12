@@ -54,19 +54,21 @@ export function TeamMemberAssignPage() {
       setError('이름을 입력해주세요.')
       return
     }
-    const newId = Math.max(0, ...members.map((m) => m.memberId)) + 1
-    setMembers([
-      ...members,
-      {
-        memberId: newId,
-        teamId: currentTeam.teamId,
-        doorayMemberId: '',
-        memberName: trimmed,
-        managerYn: 'N',
-        createdAt: new Date().toISOString(),
-        createdMemberId: newId,
-      },
-    ])
+    setMembers((prev) => {
+      const newId = Math.max(0, ...prev.map((m) => m.memberId)) + 1
+      return [
+        ...prev,
+        {
+          memberId: newId,
+          teamId: currentTeam.teamId,
+          doorayMemberId: '',
+          memberName: trimmed,
+          managerYn: 'N' as const,
+          createdAt: new Date().toISOString(),
+          createdMemberId: newId,
+        },
+      ]
+    })
     setNewName('')
   }
 
@@ -165,13 +167,15 @@ export function TeamMemberAssignPage() {
                           {m.managerYn === 'Y' ? '관리자 해제' : '관리자 지정'}
                         </button>
                       )}
-                      <button
-                        type="button"
-                        onClick={() => handleRemove(m.memberId)}
-                        className="px-3 py-1.5 border border-gray-300 text-gray-600 rounded-md text-sm hover:bg-gray-50"
-                      >
-                        등록 해제
-                      </button>
+                      {m.memberId !== currentMemberId && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemove(m.memberId)}
+                          className="px-3 py-1.5 border border-gray-300 text-gray-600 rounded-md text-sm hover:bg-gray-50"
+                        >
+                          등록 해제
+                        </button>
+                      )}
                     </div>
                   )}
                 </li>

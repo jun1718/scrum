@@ -93,7 +93,18 @@ export function Layout() {
     setCurrentMemberId(newId)
   }
 
-  if (!loading && currentMemberId == null) {
+  if (loading) {
+    return (
+      <div className="flex flex-col h-screen bg-gray-50">
+        <TopHeader />
+        <div className="flex flex-1 items-center justify-center">
+          <p className="text-sm text-gray-400">로딩 중...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (currentMemberId == null) {
     return <RegisterScreen onRegister={handleRegister} />
   }
 
