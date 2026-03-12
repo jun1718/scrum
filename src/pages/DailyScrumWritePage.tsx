@@ -1,16 +1,15 @@
 import { useState, useMemo } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useMockData } from '@/hooks/useMockData'
-import { ScrumRow, type ScrumRowData } from '@/components/ScrumRow'
-import { PeerReportModal } from '@/components/PeerReportModal'
 
 const REPORT_TABS = [
-  { to: '/', label: '데일리 슈크럼 작성', end: true },
-  { to: '/reports/daily', label: '데일리 보고' },
+  { to: '/reports/daily', label: '일간 보고' },
   { to: '/reports/weekly', label: '주간 보고' },
   { to: '/reports/monthly', label: '월간 보고' },
   { to: '/reports/review', label: '성과 보고' },
 ]
+import { ScrumRow, type ScrumRowData } from '@/components/ScrumRow'
+import { PeerReportModal } from '@/components/PeerReportModal'
 
 export function DailyScrumWritePage() {
   const {
@@ -169,13 +168,13 @@ export function DailyScrumWritePage() {
   return (
     <div className="bg-gray-50 min-h-full">
       <header className="h-14 bg-white border-b px-6 flex items-center">
-        <h1 className="font-semibold text-gray-900">데일리 슈크럼 작성</h1>
+        <h1 className="font-semibold text-gray-900">마이페이지</h1>
       </header>
       <div className="bg-white border-b">
         <nav className="flex gap-0 px-6">
           {REPORT_TABS.map(({ to, label, end }) => (
             <NavLink
-              key={label}
+              key={to}
               to={to}
               end={end}
               className={({ isActive }: { isActive: boolean }) =>

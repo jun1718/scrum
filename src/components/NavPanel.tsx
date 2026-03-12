@@ -161,9 +161,9 @@ export function NavPanel({ teamName, hasTeam = false }: NavPanelProps) {
           )}
         </div>
 
-        {/* 개인 보고 */}
+        {/* 마이페이지 */}
         <div className="mb-1">
-          <p className="text-xs text-gray-400 uppercase tracking-wider px-4 pt-4 pb-1">개인</p>
+          <p className="text-xs text-gray-400 uppercase tracking-wider px-4 pt-4 pb-1">마이페이지</p>
           {[
             { to: '/reports/daily', label: '일간 보고' },
             { to: '/reports/weekly', label: '주간 보고' },

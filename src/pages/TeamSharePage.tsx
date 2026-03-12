@@ -2,13 +2,13 @@ import { useState } from 'react'
 import { useMockData } from '@/hooks/useMockData'
 import { calcWorkRate, sumWorkHours } from '@/utils/calc'
 
-const SHARE_TABS = [
-  { to: '/team/share', search: '?tab=daily', label: '데일리 보고' },
-  { to: '/team/share', search: '?tab=weekly', label: '주간 보고' },
-  { to: '/team/share', search: '?tab=monthly', label: '월간 보고' },
-]
-
 type ShareTab = 'daily' | 'weekly' | 'monthly'
+
+const SHARE_TABS: { key: ShareTab; label: string }[] = [
+  { key: 'daily', label: '일간 보고' },
+  { key: 'weekly', label: '주간 보고' },
+  { key: 'monthly', label: '월간 보고' },
+]
 
 export function TeamSharePage() {
   const [tab, setTab] = useState<ShareTab>(() => {
@@ -32,27 +32,24 @@ export function TeamSharePage() {
   return (
     <div className="bg-gray-50 min-h-full">
       <header className="h-14 bg-white border-b px-6 flex items-center">
-        <h1 className="font-semibold text-gray-900">팀 업무 공유</h1>
+        <h1 className="font-semibold text-gray-900">팀 공유</h1>
       </header>
       <div className="bg-white border-b">
         <nav className="flex gap-0 px-6">
-          {SHARE_TABS.map(({ search, label }) => {
-            const t = search.includes('daily') ? 'daily' : search.includes('weekly') ? 'weekly' : 'monthly'
-            return (
-              <button
-                key={t}
-                type="button"
-                onClick={() => setTab(t)}
-                className={`px-4 py-3 text-sm border-b-2 ${
-                  tab === t
-                    ? 'border-blue-500 text-blue-600 font-medium'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                {label}
-              </button>
-            )
-          })}
+          {SHARE_TABS.map(({ key, label }) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setTab(key)}
+              className={`px-4 py-3 text-sm border-b-2 ${
+                tab === key
+                  ? 'border-blue-500 text-blue-600 font-medium'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
         </nav>
       </div>
       <div className="p-6">

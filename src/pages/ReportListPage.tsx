@@ -5,12 +5,11 @@ import { ReportTable } from '@/components/ReportTable'
 import { ReviewCreateModal } from '@/components/ReviewCreateModal'
 import type { PeerReport, Report, ReportDetail, ReportType } from '@/types'
 
-const REPORT_TABS: { to: string; label: string; type: ReportType }[] = [
-  { to: '/', label: '데일리 슈크럼 작성', type: 'daily' },
-  { to: '/reports/daily', label: '데일리 보고', type: 'daily' },
-  { to: '/reports/weekly', label: '주간 보고', type: 'weekly' },
-  { to: '/reports/monthly', label: '월간 보고', type: 'monthly' },
-  { to: '/reports/review', label: '성과 보고', type: 'review' },
+const REPORT_TABS = [
+  { to: '/reports/daily', label: '일간 보고' },
+  { to: '/reports/weekly', label: '주간 보고' },
+  { to: '/reports/monthly', label: '월간 보고' },
+  { to: '/reports/review', label: '성과 보고' },
 ]
 
 export function ReportListPage() {
@@ -163,12 +162,7 @@ export function ReportListPage() {
   return (
     <div className="bg-gray-50 min-h-full">
       <header className="h-14 bg-white border-b px-6 flex items-center justify-between">
-        <h1 className="font-semibold text-gray-900">
-          {reportType === 'daily' && '데일리 보고'}
-          {reportType === 'weekly' && '주간 보고'}
-          {reportType === 'monthly' && '월간 보고'}
-          {reportType === 'review' && '성과 보고'}
-        </h1>
+        <h1 className="font-semibold text-gray-900">마이페이지</h1>
         {reportType === 'weekly' && (
           <button
             type="button"
