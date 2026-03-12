@@ -172,11 +172,10 @@ export function DailyScrumWritePage() {
       </header>
       <div className="bg-white border-b">
         <nav className="flex gap-0 px-6">
-          {REPORT_TABS.map(({ to, label, end }) => (
+          {REPORT_TABS.map(({ to, label }) => (
             <NavLink
               key={to}
               to={to}
-              end={end}
               className={({ isActive }: { isActive: boolean }) =>
                 `px-4 py-3 text-sm border-b-2 ${
                   isActive
