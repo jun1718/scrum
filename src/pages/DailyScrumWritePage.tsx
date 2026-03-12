@@ -15,7 +15,7 @@ const REPORT_TABS = [
 export function DailyScrumWritePage() {
   const {
     weeklyTags,
-    currentMemberId,
+    currentMemberId: rawMemberId,
     reports,
     reportDetails,
     peerReports,
@@ -26,6 +26,8 @@ export function DailyScrumWritePage() {
     members,
     tags,
   } = useMockData()
+
+  const currentMemberId = rawMemberId!
 
   const today = new Date().toISOString().slice(0, 10)
   const existingDaily = reports.find(
@@ -199,7 +201,7 @@ export function DailyScrumWritePage() {
               onChange={(next) => updateRow(i, next)}
               onRemove={() => removeRow(i)}
               getMonthlyTagName={getMonthlyTagName}
-              readOnlyTaskTitle
+              readOnlyTaskTitle={false}
             />
           ))}
           <button

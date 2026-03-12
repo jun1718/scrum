@@ -21,6 +21,7 @@ export function ReportTable({
   onDelete,
   type,
   onReportClick,
+  onView,
 }: ReportTableProps) {
   const sorted = [...reports].sort(
     (a, b) => new Date(b.staDate).getTime() - new Date(a.staDate).getTime()

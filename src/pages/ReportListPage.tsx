@@ -25,8 +25,10 @@ export function ReportListPage() {
     setReports,
     setReportDetails,
     setReportTags,
-    currentMemberId,
+    currentMemberId: rawMemberId,
   } = useMockData()
+
+  const currentMemberId = rawMemberId!
 
   const [reviewModalOpen, setReviewModalOpen] = useState(false)
   const [detailReport, setDetailReport] = useState<Report | null>(null)

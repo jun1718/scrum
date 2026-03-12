@@ -1,4 +1,0 @@
-[
-  { "peerReportId": 1, "reportId": 101, "peerMemberId": 2, "content": "API 스펙 논의 및 공유 요청 협업", "createdAt": "2025-03-03T18:30:00.000Z", "createdMemberId": 1 },
-  { "peerReportId": 2, "reportId": 103, "peerMemberId": 3, "content": "UI 컴포넌트 리뷰 피드백 반영", "createdAt": "2025-03-05T17:00:00.000Z", "createdMemberId": 1 }
-]

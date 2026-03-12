@@ -1,8 +1,0 @@
-[
-  { "reportTagId": 1, "reportId": 201, "tagId": 1, "workHours": 4.5, "type": "weekly", "aiSummaryContent": null, "createdAt": "2025-03-05T03:00:00.000Z", "createdMemberId": 1 },
-  { "reportTagId": 2, "reportId": 201, "tagId": 2, "workHours": 3, "type": "weekly", "aiSummaryContent": null, "createdAt": "2025-03-05T03:00:00.000Z", "createdMemberId": 1 },
-  { "reportTagId": 3, "reportId": 201, "tagId": 3, "workHours": 1, "type": "weekly", "aiSummaryContent": null, "createdAt": "2025-03-05T03:00:00.000Z", "createdMemberId": 1 },
-  { "reportTagId": 4, "reportId": 301, "tagId": 1, "workHours": 15, "type": "monthly", "aiSummaryContent": "두레이 API 연동 검토 및 인증 플로우 설계를 진행하였고, 팀 내 스펙 공유 및 문서화를 완료했습니다.", "createdAt": "2025-03-26T05:00:00.000Z", "createdMemberId": 1 },
-  { "reportTagId": 5, "reportId": 301, "tagId": 2, "workHours": 20, "type": "monthly", "aiSummaryContent": "데일리 슈크럼 UI 기획 및 와이어프레임 작성, 기획 문서 정리를 수행하였습니다.", "createdAt": "2025-03-26T05:00:00.000Z", "createdMemberId": 1 },
-  { "reportTagId": 6, "reportId": 401, "tagId": 1, "workHours": 100, "type": "review", "aiSummaryContent": "연간 두레이·슈크럼 관련 업무를 수행하였으며, API 연동 및 기획 주도 역할을 담당했습니다. 팀 내 기술 공유와 문서화에 기여하였습니다.", "createdAt": "2025-03-08T10:00:00.000Z", "createdMemberId": 1 }
-]

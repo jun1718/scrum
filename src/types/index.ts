@@ -12,6 +12,7 @@ export interface Member {
   teamId: number | null
   doorayMemberId: string
   memberName: string
+  managerYn: 'Y' | 'N'
   createdAt: string
   createdMemberId: number
 }

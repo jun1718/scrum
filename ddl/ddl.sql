@@ -21,6 +21,7 @@ CREATE TABLE member (
     team_id           BIGINT       NULL COMMENT '소속 팀 ID, 미지정 시 NULL',
     dooray_member_id  VARCHAR(64)  NOT NULL COMMENT 'Dooray 회원 id',
     member_name       VARCHAR(255) NOT NULL,
+    manager_yn        CHAR(1)      NOT NULL DEFAULT 'N' COMMENT '관리자 여부 (Y: 팀 설정 수정/팀원 삭제 가능, N: 읽기 전용 + 팀원 추가만 가능)',
     created_at        DATETIME(3)  NOT NULL,
     created_member_id BIGINT       NOT NULL,
     updated_at        DATETIME(3)  NULL,

@@ -59,7 +59,7 @@ export function TeamSharePage() {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
           {teamMembers.length === 0 ? (
             <div className="text-center py-12 text-gray-400">
-              팀을 지정하면 팀원별 보고를 볼 수 있습니다.
+              팀을 등록하면 팀원별 보고를 볼 수 있습니다.
             </div>
           ) : (
             <div className="overflow-x-auto">

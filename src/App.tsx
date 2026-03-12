@@ -1,4 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { MockDataProvider } from '@/context/MockDataProvider'
+import { ToastProvider } from '@/components/Toast'
 import { Layout } from '@/components/Layout'
 import { TeamCreatePage } from '@/pages/TeamCreatePage'
 import { TeamManagePage } from '@/pages/TeamManagePage'
@@ -11,6 +13,8 @@ import { TeamSharePage } from '@/pages/TeamSharePage'
 export default function App() {
   return (
     <BrowserRouter>
+      <MockDataProvider>
+      <ToastProvider>
       <Routes>
         <Route element={<Layout />}>
           <Route path="/" element={<DailyScrumWritePage />} />
@@ -23,6 +27,8 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
+      </ToastProvider>
+      </MockDataProvider>
     </BrowserRouter>
   )
 }
