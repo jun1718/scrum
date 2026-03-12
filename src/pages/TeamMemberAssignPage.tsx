@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMockData } from '@/hooks/useMockData'
 
@@ -8,6 +8,7 @@ export function TeamMemberAssignPage() {
   const currentMemberId = rawMemberId!
   const [newName, setNewName] = useState('')
   const [error, setError] = useState('')
+  const addingRef = useRef(false)
 
   const currentMember = members.find((m) => m.memberId === currentMemberId)
   const isManager = currentMember?.managerYn === 'Y'
@@ -48,28 +49,29 @@ export function TeamMemberAssignPage() {
   )
 
   const handleAdd = () => {
+    if (addingRef.current) return
     setError('')
     const trimmed = newName.trim()
     if (!trimmed) {
       setError('이름을 입력해주세요.')
       return
     }
-    setMembers((prev) => {
-      const newId = Math.max(0, ...prev.map((m) => m.memberId)) + 1
-      return [
-        ...prev,
-        {
-          memberId: newId,
-          teamId: currentTeam.teamId,
-          doorayMemberId: '',
-          memberName: trimmed,
-          managerYn: 'N' as const,
-          createdAt: new Date().toISOString(),
-          createdMemberId: newId,
-        },
-      ]
-    })
+    addingRef.current = true
+    const newId = Math.max(0, ...members.map((m) => m.memberId)) + 1
+    setMembers([
+      ...members,
+      {
+        memberId: newId,
+        teamId: currentTeam.teamId,
+        doorayMemberId: '',
+        memberName: trimmed,
+        managerYn: 'N' as const,
+        createdAt: new Date().toISOString(),
+        createdMemberId: newId,
+      },
+    ])
     setNewName('')
+    setTimeout(() => { addingRef.current = false }, 0)
   }
 
   const handleRemove = (memberId: number) => {
