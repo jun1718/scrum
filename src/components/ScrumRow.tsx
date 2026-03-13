@@ -19,8 +19,7 @@ interface ScrumRowProps {
   onChange: (row: ScrumRowData) => void
   onRemove: () => void
   getMonthlyTagName: (weeklyTagId: number) => string | null
-  /** 데일리 슈크럼 작성 화면에서는 true(백엔드가 링크로 제목 조회). 저장 후 보고/수정 화면에서는 false로 수정 가능 */
-  readOnlyTaskTitle?: boolean
+  readOnly?: boolean
 }
 
 export function ScrumRow({
@@ -29,7 +28,7 @@ export function ScrumRow({
   onChange,
   onRemove,
   getMonthlyTagName,
-  readOnlyTaskTitle = false,
+  readOnly = false,
 }: ScrumRowProps) {
   const monthlyName = row.tagId ? getMonthlyTagName(row.tagId) : null
   const [performanceModalOpen, setPerformanceModalOpen] = useState(false)
@@ -47,30 +46,28 @@ export function ScrumRow({
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-4 mb-3 relative">
-      <button
-        type="button"
-        onClick={onRemove}
-        className="absolute top-3 right-3 text-gray-400 hover:text-red-500 text-lg leading-none"
-        aria-label="행 제거"
-      >
-        ×
-      </button>
+      {!readOnly && (
+        <button
+          type="button"
+          onClick={onRemove}
+          className="absolute top-3 right-3 text-gray-400 hover:text-red-500 text-lg leading-none"
+          aria-label="행 제거"
+        >
+          ×
+        </button>
+      )}
       <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
         <div>
           <label className="block text-xs text-gray-500 mb-1">업무 제목</label>
-          {readOnlyTaskTitle ? (
-            <div className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm bg-gray-50 text-gray-600">
-              {row.taskTitle || '링크 입력 후 백엔드에서 제목을 불러옵니다'}
-            </div>
-          ) : (
-            <input
-              type="text"
-              value={row.taskTitle}
-              onChange={(e) => onChange({ ...row, taskTitle: e.target.value })}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="업무 제목"
-            />
-          )}
+          <input
+            type="text"
+            value={row.taskTitle}
+            onChange={(e) => onChange({ ...row, taskTitle: e.target.value })}
+            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-500"
+            placeholder="업무 제목"
+            disabled={readOnly}
+          />
+          <p className="text-xs text-gray-400 mt-1">[프로토타입] 실서비스에서는 업무 링크 입력 시 Dooray API를 호출하여 업무 제목이 자동으로 채워집니다. API 응답이 없으면 빈 값입니다. 사용자가 직접 수정할 수 있습니다.</p>
         </div>
         <div>
           <label className="block text-xs text-gray-500 mb-1">업무 링크</label>
@@ -79,10 +76,18 @@ export function ScrumRow({
               type="url"
               value={row.taskLink}
               onChange={(e) => onChange({ ...row, taskLink: e.target.value })}
-              className="flex-1 min-w-0 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="https://... 또는 업무 URL"
+              onBlur={(e) => {
+                const v = e.target.value.trim()
+                if (v && !/^https:\/\/nhnent\.dooray\.com\/project\/tasks\/\d+$/.test(v)) {
+                  alert('업무 링크는 https://nhnent.dooray.com/project/tasks/{taskId} 형식만 가능합니다.')
+                  onChange({ ...row, taskLink: '' })
+                }
+              }}
+              className="flex-1 min-w-0 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-500"
+              placeholder="https://nhnent.dooray.com/project/tasks/123456"
+              disabled={readOnly}
             />
-            {row.taskLink ? (
+            {row.taskLink && /^https:\/\/nhnent\.dooray\.com\/project\/tasks\/\d+$/.test(row.taskLink) ? (
               <a
                 href={row.taskLink}
                 target="_blank"
@@ -93,6 +98,7 @@ export function ScrumRow({
               </a>
             ) : null}
           </div>
+          <p className="text-xs text-gray-400 mt-1">두레이 업무의 "링크 복사" 버튼을 통해 복사한 것을 붙여넣기 해주세요.</p>
         </div>
       </div>
       <div className="mt-3">
@@ -102,10 +108,11 @@ export function ScrumRow({
         <textarea
           value={row.done}
           onChange={(e) => onChange({ ...row, done: e.target.value })}
-          className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-500"
           rows={2}
           required
           placeholder="한 일 (필수)"
+          disabled={readOnly}
         />
       </div>
       <div className="mt-3 grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
@@ -125,8 +132,9 @@ export function ScrumRow({
               const v = Math.min(24, Math.max(1, Math.floor(Number(e.target.value) || 0)))
               onChange({ ...row, workHours: v })
             }}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-500"
             placeholder="1~24"
+            disabled={readOnly}
           />
         </div>
         <div>
@@ -139,6 +147,7 @@ export function ScrumRow({
             onChange={(tagId) => onChange({ ...row, tagId })}
             placeholder="선택"
             required
+            disabled={readOnly}
           />
         </div>
         <div>
@@ -152,7 +161,8 @@ export function ScrumRow({
           <button
             type="button"
             onClick={openPerformanceModal}
-            className="w-full text-left border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-50 min-h-[38px]"
+            disabled={readOnly}
+            className="w-full text-left border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-50 min-h-[38px] disabled:bg-gray-100 disabled:text-gray-500"
           >
             <span className={row.performance ? 'text-gray-900' : 'text-gray-400'}>
               {row.performance || '클릭하여 입력'}

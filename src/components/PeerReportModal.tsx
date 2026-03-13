@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { Member, PeerReport } from '@/types'
 
 interface PeerReportModalProps {
@@ -7,6 +8,7 @@ interface PeerReportModalProps {
   teamMembers: Member[]
   currentMemberId: number
   onSave: (reportId: number, peerMemberId: number, content: string) => void
+  onUpdate: (peerReportId: number, content: string) => void
   onDelete: (peerReportId: number) => void
   reportId: number | null
 }
@@ -18,15 +20,39 @@ export function PeerReportModal({
   teamMembers,
   currentMemberId,
   onSave,
+  onUpdate,
   onDelete,
   reportId,
 }: PeerReportModalProps) {
+  const [editingId, setEditingId] = useState<number | null>(null)
+  const [editContent, setEditContent] = useState('')
+
   if (!isOpen) return null
 
   const peers = teamMembers.filter((m) => m.memberId !== currentMemberId)
   const reportsForCurrent = reportId
     ? peerReports.filter((pr) => pr.reportId === reportId)
     : []
+  const usedPeerIds = new Set(reportsForCurrent.map((pr) => pr.peerMemberId))
+  const availablePeers = peers.filter((m) => !usedPeerIds.has(m.memberId))
+
+  const startEdit = (pr: PeerReport) => {
+    setEditingId(pr.peerReportId)
+    setEditContent(pr.content ?? '')
+  }
+
+  const cancelEdit = () => {
+    setEditingId(null)
+    setEditContent('')
+  }
+
+  const saveEdit = () => {
+    if (editingId != null && editContent.trim()) {
+      onUpdate(editingId, editContent.trim())
+      setEditingId(null)
+      setEditContent('')
+    }
+  }
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-start justify-center pt-20 z-50">
@@ -49,6 +75,7 @@ export function PeerReportModal({
               </p>
               {reportsForCurrent.map((pr) => {
                 const peer = teamMembers.find((m) => m.memberId === pr.peerMemberId)
+                const isEditing = editingId === pr.peerReportId
                 return (
                   <div
                     key={pr.peerReportId}
@@ -56,15 +83,55 @@ export function PeerReportModal({
                   >
                     <div className="flex justify-between items-start">
                       <span className="font-medium text-sm">{peer?.memberName ?? pr.peerMemberId}</span>
-                      <button
-                        type="button"
-                        onClick={() => onDelete(pr.peerReportId)}
-                        className="text-red-600 hover:underline text-xs"
-                      >
-                        삭제
-                      </button>
+                      {!isEditing && (
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => startEdit(pr)}
+                            className="text-blue-600 hover:underline text-xs"
+                          >
+                            수정
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => onDelete(pr.peerReportId)}
+                            className="text-red-600 hover:underline text-xs"
+                          >
+                            삭제
+                          </button>
+                        </div>
+                      )}
                     </div>
-                    <p className="text-sm text-gray-600 mt-1">{pr.content ?? '—'}</p>
+                    {isEditing ? (
+                      <div className="mt-2">
+                        <textarea
+                          value={editContent}
+                          onChange={(e) => setEditContent(e.target.value)}
+                          className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          rows={3}
+                          autoFocus
+                        />
+                        <div className="mt-2 flex justify-end gap-2">
+                          <button
+                            type="button"
+                            onClick={cancelEdit}
+                            className="px-3 py-1.5 border border-gray-300 rounded-md text-xs hover:bg-gray-50"
+                          >
+                            취소
+                          </button>
+                          <button
+                            type="button"
+                            onClick={saveEdit}
+                            disabled={!editContent.trim()}
+                            className="px-3 py-1.5 bg-blue-500 text-white rounded-md text-xs hover:bg-blue-600 disabled:opacity-50"
+                          >
+                            저장
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-600 mt-1">{pr.content ?? '—'}</p>
+                    )}
                   </div>
                 )
               })}
@@ -88,7 +155,7 @@ export function PeerReportModal({
                   required
                 >
                   <option value="">선택</option>
-                  {peers.map((m) => (
+                  {availablePeers.map((m) => (
                     <option key={m.memberId} value={m.memberId}>
                       {m.memberName}
                     </option>

@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { MockDataProvider } from '@/context/MockDataProvider'
 import { ToastProvider } from '@/components/Toast'
+import { ApiOverlayProvider } from '@/components/ApiTag'
 import { Layout } from '@/components/Layout'
 import { TeamCreatePage } from '@/pages/TeamCreatePage'
 import { TeamManagePage } from '@/pages/TeamManagePage'
@@ -14,6 +15,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <MockDataProvider>
+      <ApiOverlayProvider>
       <ToastProvider>
       <Routes>
         <Route element={<Layout />}>
@@ -28,6 +30,7 @@ export default function App() {
         </Route>
       </Routes>
       </ToastProvider>
+      </ApiOverlayProvider>
       </MockDataProvider>
     </BrowserRouter>
   )

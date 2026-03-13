@@ -37,6 +37,7 @@ export function TeamManagePage() {
   const [scheduleError, setScheduleError] = useState('')
   const [tagEditing, setTagEditing] = useState(false)
   const [tagError, setTagError] = useState('')
+  const [editingTags, setEditingTags] = useState<Tag[]>([])
 
   const currentTeam = currentTeamId ? teams.find((t) => t.teamId === currentTeamId) : null
 
@@ -46,6 +47,14 @@ export function TeamManagePage() {
       setWeekEndDay(currentTeam.weekEndDay)
     }
   }, [currentTeam])
+
+  // 편집 중인 태그 (편집 모드일 때는 로컬 상태, 아닐 때는 context 상태)
+  const displayMonthlyTags = tagEditing
+    ? editingTags.filter((t) => t.teamId === currentTeamId && t.parentTagId == null)
+    : monthlyTags
+  const displayWeeklyTags = tagEditing
+    ? editingTags.filter((t) => t.teamId === currentTeamId && t.parentTagId != null)
+    : weeklyTags
 
   const handleSaveSchedule = () => {
     if (!currentTeam) return
@@ -75,9 +84,9 @@ export function TeamManagePage() {
 
   const addWeeklyTag = (parentId: number) => {
     if (!currentTeamId) return
-    const newId = Math.max(0, ...tags.map((t) => t.tagId)) + 1
-    setTags([
-      ...tags,
+    const newId = Math.max(0, ...editingTags.map((t) => t.tagId), ...tags.map((t) => t.tagId)) + 1
+    setEditingTags([
+      ...editingTags,
       {
         tagId: newId,
         teamId: currentTeamId,
@@ -92,9 +101,9 @@ export function TeamManagePage() {
 
   const addMonthlyTag = () => {
     if (!currentTeamId) return
-    const newId = Math.max(0, ...tags.map((t) => t.tagId)) + 1
-    setTags([
-      ...tags,
+    const newId = Math.max(0, ...editingTags.map((t) => t.tagId), ...tags.map((t) => t.tagId)) + 1
+    setEditingTags([
+      ...editingTags,
       {
         tagId: newId,
         teamId: currentTeamId,
@@ -108,30 +117,31 @@ export function TeamManagePage() {
   }
 
   const updateTag = (tagId: number, updates: Partial<Tag>) => {
-    setTags(tags.map((t) => (t.tagId === tagId ? { ...t, ...updates } : t)))
+    setEditingTags(editingTags.map((t) => (t.tagId === tagId ? { ...t, ...updates } : t)))
   }
 
   const removeTag = (tagId: number) => {
-    const target = tags.find((t) => t.tagId === tagId)
+    const target = editingTags.find((t) => t.tagId === tagId)
     if (target?.type === 'monthly') {
-      // 월간 태그 삭제 시 하위 주간 태그도 함께 삭제
-      setTags(tags.filter((t) => t.tagId !== tagId && t.parentTagId !== tagId))
+      setEditingTags(editingTags.filter((t) => t.tagId !== tagId && t.parentTagId !== tagId))
     } else {
-      setTags(tags.filter((t) => t.tagId !== tagId))
+      setEditingTags(editingTags.filter((t) => t.tagId !== tagId))
     }
   }
 
   const handleSaveTags = () => {
     setTagError('')
+    const editMonthly = editingTags.filter((t) => t.teamId === currentTeamId && t.parentTagId == null)
+    const editWeekly = editingTags.filter((t) => t.teamId === currentTeamId && t.parentTagId != null)
     // 밸리데이션: 월간 태그명 비어있는지
-    const emptyMonthly = monthlyTags.some((mt) => !mt.tagName.trim())
+    const emptyMonthly = editMonthly.some((mt) => !mt.tagName.trim())
     if (emptyMonthly) {
       setTagError('월간 태그(ESM명)를 입력해주세요.')
       return
     }
     // 밸리데이션: 월간 태그가 있는데 주간 태그가 하나도 없는 경우
-    for (const mt of monthlyTags) {
-      const children = weeklyTags.filter((wt) => wt.parentTagId === mt.tagId)
+    for (const mt of editMonthly) {
+      const children = editWeekly.filter((wt) => wt.parentTagId === mt.tagId)
       if (children.length === 0) {
         setTagError(`"${mt.tagName}" 월간 태그에 주간 태그를 1개 이상 추가해주세요.`)
         return
@@ -143,10 +153,13 @@ export function TeamManagePage() {
       }
     }
     // 밸리데이션: 주간 태그만 있고 월간 태그가 없는 경우 (방어)
-    if (monthlyTags.length === 0 && weeklyTags.length > 0) {
+    if (editMonthly.length === 0 && editWeekly.length > 0) {
       setTagError('월간 태그(ESM명)를 먼저 추가해주세요.')
       return
     }
+    // 밸리데이션 통과 → context에 반영 (Replace All)
+    const otherTags = tags.filter((t) => t.teamId !== currentTeamId)
+    setTags([...otherTags, ...editingTags])
     setTagEditing(false)
   }
 
@@ -266,7 +279,25 @@ export function TeamManagePage() {
                 ) : (
                   <button
                     type="button"
-                    onClick={() => { setTagEditing(true); setTagError(''); if (!hasExistingTags) addMonthlyTag() }}
+                    onClick={() => {
+                      const teamTags = tags.filter((t) => t.teamId === currentTeamId)
+                      setEditingTags(teamTags)
+                      setTagEditing(true)
+                      setTagError('')
+                      if (!hasExistingTags) {
+                        // 태그가 없으면 첫 월간 태그 자동 추가
+                        const newId = Math.max(0, ...tags.map((t) => t.tagId)) + 1
+                        setEditingTags([{
+                          tagId: newId,
+                          teamId: currentTeamId!,
+                          parentTagId: null,
+                          tagName: '',
+                          type: 'monthly',
+                          createdAt: new Date().toISOString(),
+                          createdMemberId: 1,
+                        }])
+                      }
+                    }}
                     className="px-3 py-1.5 border border-gray-300 rounded-md text-sm hover:bg-gray-50"
                   >
                     {hasExistingTags ? '수정' : '추가'}
@@ -282,8 +313,8 @@ export function TeamManagePage() {
             </div>
           )}
           <div className="space-y-3">
-            {monthlyTags.map((mt) => {
-              const children = weeklyTags.filter((wt) => wt.parentTagId === mt.tagId)
+            {displayMonthlyTags.map((mt) => {
+              const children = displayWeeklyTags.filter((wt) => wt.parentTagId === mt.tagId)
               return (
                 <div key={mt.tagId} className="border border-gray-100 rounded-lg p-3 bg-gray-50">
                   {/* 월간 태그 */}
@@ -353,7 +384,7 @@ export function TeamManagePage() {
                 + 월간 태그(ESM명) 추가
               </button>
             )}
-            {!tagEditing && monthlyTags.length === 0 && (
+            {!tagEditing && displayMonthlyTags.length === 0 && (
               <p className="text-sm text-gray-400">등록된 태그가 없습니다.</p>
             )}
           </div>

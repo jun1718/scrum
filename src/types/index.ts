@@ -35,6 +35,7 @@ export interface Report {
   staDate: string
   endDate: string
   type: ReportType
+  tomorrowPlan?: string | null
   createdAt: string
   createdMemberId: number
 }

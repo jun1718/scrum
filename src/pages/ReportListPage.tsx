@@ -1,9 +1,11 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { NavLink, useParams } from 'react-router-dom'
 import { useMockData } from '@/hooks/useMockData'
 import { ReportTable } from '@/components/ReportTable'
 import { ReviewCreateModal } from '@/components/ReviewCreateModal'
-import type { PeerReport, Report, ReportDetail, ReportType } from '@/types'
+import { PeerReportModal } from '@/components/PeerReportModal'
+import { ScrumRow, type ScrumRowData } from '@/components/ScrumRow'
+import type { Report, ReportType } from '@/types'
 
 const REPORT_TABS = [
   { to: '/reports/daily', label: '일간 보고' },
@@ -20,18 +22,33 @@ export function ReportListPage() {
     members,
     detailsByReportId,
     reportTagsByReportId,
-    peerReportsByReportId,
     setReports,
+    reportDetails,
     setReportDetails,
     setReportTags,
+    peerReports,
+    setPeerReports,
     currentMemberId: rawMemberId,
+    weeklyTags,
+    tags,
   } = useMockData()
+
+  const getMonthlyTagName = (weeklyTagId: number) => {
+    const tag = tags.find((t) => t.tagId === weeklyTagId)
+    if (!tag?.parentTagId) return null
+    const parent = tags.find((t) => t.tagId === tag.parentTagId)
+    return parent?.tagName ?? null
+  }
 
   const currentMemberId = rawMemberId!
 
   const [reviewModalOpen, setReviewModalOpen] = useState(false)
-  const [detailReport, setDetailReport] = useState<Report | null>(null)
   const [viewReport, setViewReport] = useState<Report | null>(null)
+  const [viewEditing, setViewEditing] = useState(false)
+  const [viewRows, setViewRows] = useState<ScrumRowData[]>([])
+  const [peerModalReport, setPeerModalReport] = useState<Report | null>(null)
+  const [tomorrowModalReport, setTomorrowModalReport] = useState<Report | null>(null)
+  const [tomorrowDraft, setTomorrowDraft] = useState('')
 
   const reportType = (type ?? 'daily') as ReportType
   const reports = myReports.filter((r) => r.type === reportType)
@@ -41,34 +58,86 @@ export function ReportListPage() {
 
   const showAiSummary = reportType === 'monthly' || reportType === 'review'
 
-  const openDetail = (report: Report) => {
-    if (report.type !== 'daily') return
-    setDetailReport(report)
-  }
-
-  const closeDetail = () => setDetailReport(null)
-
   const openView = (report: Report) => {
     if (report.type !== 'daily') return
+    const details = detailsByReportId[report.reportId] ?? []
+    setViewRows(details.map((d) => ({
+      taskId: d.taskId,
+      taskTitle: d.taskTitle,
+      taskLink: d.taskLink,
+      done: d.done,
+      workHours: d.workHours,
+      performance: d.performance ?? '',
+      tagId: d.tagId,
+    })))
+    setViewEditing(false)
     setViewReport(report)
   }
 
-  const closeView = () => setViewReport(null)
+  const closeView = () => {
+    setViewReport(null)
+    setViewEditing(false)
+  }
 
-  const detailPeers: PeerReport[] =
-    detailReport && peerReportsByReportId[detailReport.reportId]
-      ? peerReportsByReportId[detailReport.reportId]
-      : []
-  const detailPerf: ReportDetail[] =
-    detailReport && detailsByReportId[detailReport.reportId]
-      ? detailsByReportId[detailReport.reportId].filter((d) => d.performance && d.performance.trim() !== '')
-      : []
+  const handleViewSave = () => {
+    if (!viewReport) return
+    const reportId = viewReport.reportId
+    let newDetails = reportDetails.filter((d) => d.reportId !== reportId)
+    const maxDetailId = Math.max(0, ...reportDetails.map((d) => d.reportDetailId))
+    viewRows.forEach((row, i) => {
+      if (!row.done.trim() || row.tagId == null) return
+      const detailId = maxDetailId + i + 1
+      newDetails.push({
+        reportDetailId: detailId,
+        reportId,
+        tagId: row.tagId,
+        taskId: row.taskId || detailId,
+        taskTitle: row.taskTitle || '직접 입력',
+        taskLink: row.taskLink || '#',
+        done: row.done,
+        workHours: row.workHours,
+        performance: row.performance || null,
+        createdAt: new Date().toISOString(),
+        createdMemberId: currentMemberId,
+      })
+    })
+    setReportDetails(newDetails)
+    setViewEditing(false)
+  }
 
   const handleDelete = (report: Report) => {
     if (!confirm('삭제하시겠습니까?')) return
     setReports(allReports.filter((r) => r.reportId !== report.reportId))
     setReportDetails((prev) => prev.filter((d) => d.reportId !== report.reportId))
     setReportTags((prev) => prev.filter((rt) => rt.reportId !== report.reportId))
+  }
+
+  const teamMembers = useMemo(
+    () => members.filter((m) => m.teamId === members.find((x) => x.memberId === currentMemberId)?.teamId),
+    [members, currentMemberId]
+  )
+
+  const handlePeerSave = (reportId: number, peerMemberId: number, content: string) => {
+    const newId = Math.max(0, ...peerReports.map((p) => p.peerReportId)) + 1
+    setPeerReports([
+      ...peerReports,
+      {
+        peerReportId: newId,
+        reportId,
+        peerMemberId,
+        content,
+        createdAt: new Date().toISOString(),
+        createdMemberId: currentMemberId,
+      },
+    ])
+  }
+
+  const handlePeerUpdate = (peerReportId: number, content: string) => {
+    setPeerReports(peerReports.map((p) => (p.peerReportId === peerReportId ? { ...p, content } : p)))
+  }
+
+  const handlePeerDelete = (peerReportId: number) => {
+    setPeerReports(peerReports.filter((p) => p.peerReportId !== peerReportId))
   }
 
   const handleCreateReview = (staDate: string, endDate: string) => {
@@ -218,11 +287,10 @@ export function ReportListPage() {
             getDetails={getDetails}
             getReportTags={getReportTags}
             showAiSummary={showAiSummary}
-            onEdit={reportType === 'daily' ? openDetail : undefined}
-            onDelete={handleDelete}
+            onDelete={reportType !== 'daily' ? handleDelete : undefined}
             type={reportType}
-            onReportClick={reportType === 'daily' ? openDetail : undefined}
             onView={reportType === 'daily' ? openView : undefined}
+            onPeerReport={reportType === 'daily' ? (report) => setPeerModalReport(report) : undefined}
           />
         </div>
       </div>
@@ -237,88 +305,89 @@ export function ReportListPage() {
           <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full mx-4">
             <div className="px-6 py-4 border-b flex justify-between items-center">
               <h2 className="font-semibold text-lg">
-                데일리 슈크럼 (조회용)&nbsp;
-                <span className="text-sm text-gray-500">
-                  {viewReport.staDate} ~ {viewReport.endDate}
-                </span>
+                {viewReport.staDate} 데일리 슈크럼
               </h2>
-              <button
-                type="button"
-                onClick={closeView}
-                className="text-gray-400 hover:text-gray-600 text-xl"
-              >
-                ×
-              </button>
-            </div>
-            <div className="px-6 py-4 bg-gray-50 border-b">
-              <p className="text-sm text-gray-600">
-                데일리 슈크럼 작성 탭과 동일한 레이아웃으로,{' '}
-                <span className="font-medium">읽기 전용</span>으로만 확인할 수 있습니다.
-              </p>
+              <div className="flex items-center gap-2">
+                {viewEditing ? (
+                  <button
+                    type="button"
+                    onClick={handleViewSave}
+                    disabled={!viewRows.some((r) => r.done.trim() !== '' && r.tagId != null)}
+                    className="px-3 py-1.5 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    저장
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setViewEditing(true)}
+                    className="px-3 py-1.5 border border-gray-300 rounded-md text-sm hover:bg-gray-50"
+                  >
+                    수정
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!viewReport) return
+                    handleDelete(viewReport)
+                    closeView()
+                  }}
+                  className="px-3 py-1.5 border border-red-300 text-red-600 rounded-md text-sm hover:bg-red-50"
+                >
+                  삭제
+                </button>
+                <button
+                  type="button"
+                  onClick={closeView}
+                  className="text-gray-400 hover:text-gray-600 text-xl"
+                >
+                  ×
+                </button>
+              </div>
             </div>
             <div className="px-6 py-4 max-h-[70vh] overflow-y-auto">
-              {(detailsByReportId[viewReport.reportId] ?? []).map((d) => (
-                <div
-                  key={d.reportDetailId}
-                  className="bg-white rounded-lg border border-gray-200 p-4 mb-3"
+              {viewRows.length === 0 ? (
+                <p className="text-sm text-gray-400 text-center py-8">작성된 내용이 없습니다.</p>
+              ) : (
+                viewRows.map((row, i) => (
+                  <ScrumRow
+                    key={i}
+                    row={row}
+                    weeklyTags={weeklyTags}
+                    onChange={(next) => setViewRows(viewRows.map((r, idx) => (idx === i ? next : r)))}
+                    onRemove={() => setViewRows(viewRows.filter((_, idx) => idx !== i))}
+                    getMonthlyTagName={getMonthlyTagName}
+                    readOnly={!viewEditing}
+                  />
+                ))
+              )}
+              {viewEditing && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const nextTaskId = Math.max(0, ...viewRows.map((r) => r.taskId)) + 1
+                    setViewRows([...viewRows, { taskId: nextTaskId, taskTitle: '', taskLink: '', done: '', workHours: 0, performance: '', tagId: null }])
+                  }}
+                  className="w-full border-2 border-dashed border-gray-300 rounded-lg py-3 text-gray-400 hover:border-blue-400 hover:text-blue-500 text-sm"
                 >
-                  <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-                    <div>
-                      <p className="block text-xs text-gray-500 mb-1">업무 제목</p>
-                      <p className="text-sm text-gray-900">
-                        {d.taskTitle || '—'}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="block text-xs text-gray-500 mb-1">업무 링크</p>
-                      {d.taskLink ? (
-                        <a
-                          href={d.taskLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block truncate text-sm text-blue-600 hover:underline"
-                        >
-                          {d.taskLink}
-                        </a>
-                      ) : (
-                        <p className="text-sm text-gray-400">—</p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="mt-3">
-                    <p className="block text-xs text-gray-500 mb-1">
-                      해당 업무로 한 일
-                    </p>
-                    <p className="text-sm text-gray-800 whitespace-pre-line bg-gray-50 rounded-md px-3 py-2 border border-gray-200">
-                      {d.done || '—'}
-                    </p>
-                  </div>
-                  <div className="mt-3 grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
-                    <div>
-                      <p className="block text-xs text-gray-500 mb-1">투입시간</p>
-                      <p className="text-sm text-gray-900">
-                        {d.workHours}h
-                      </p>
-                    </div>
-                    <div>
-                      <p className="block text-xs text-gray-500 mb-1">
-                        주간 보고 태그
-                      </p>
-                      <p className="text-sm text-gray-900">#{d.tagId}</p>
-                    </div>
-                    <div className="md:col-span-2">
-                      <p className="block text-xs text-gray-500 mb-1">
-                        어필할 성과
-                      </p>
-                      <p className="text-sm text-gray-800 whitespace-pre-line bg-gray-50 rounded-md px-3 py-2 border border-gray-200">
-                        {d.performance || '—'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                  + 행 추가
+                </button>
+              )}
             </div>
-            <div className="px-6 py-4 border-t flex justify-end">
+            <div className="px-6 py-4 border-t flex justify-between items-center">
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTomorrowDraft(viewReport?.tomorrowPlan ?? '')
+                    setTomorrowModalReport(viewReport)
+                  }}
+                  className="px-3 py-1.5 border border-green-300 text-green-700 rounded-md text-sm hover:bg-green-50"
+                >
+                  내일 할 일
+                </button>
+              </div>
               <button
                 type="button"
                 onClick={closeView}
@@ -330,88 +399,67 @@ export function ReportListPage() {
           </div>
         </div>
       )}
-      {detailReport && (
-        <div className="fixed inset-0 bg-black/50 flex items-start justify-center pt-20 z-50">
-          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4">
+      {tomorrowModalReport && (
+        <div className="fixed inset-0 bg-black/50 flex items-start justify-center pt-24 z-[60]">
+          <div className="bg-white rounded-xl shadow-xl max-w-lg w-full mx-4">
             <div className="px-6 py-4 border-b flex justify-between items-center">
-              <h2 className="font-semibold text-lg">
-                데일리 보고 상세 ({detailReport.staDate} ~ {detailReport.endDate})
-              </h2>
+              <h2 className="font-semibold text-lg">내일 할 일</h2>
               <button
                 type="button"
-                onClick={closeDetail}
+                onClick={() => setTomorrowModalReport(null)}
                 className="text-gray-400 hover:text-gray-600 text-xl"
               >
                 ×
               </button>
             </div>
-            <div className="px-6 py-4 max-h-96 overflow-y-auto space-y-6">
-              <section>
-                <h3 className="text-sm font-semibold text-gray-900 mb-2">
-                  어필할 성과
-                </h3>
-                {detailPerf.length === 0 ? (
-                  <p className="text-sm text-gray-400">어필한 성과가 없습니다.</p>
-                ) : (
-                  <ul className="space-y-2">
-                    {detailPerf.map((d) => (
-                      <li
-                        key={d.reportDetailId}
-                        className="border border-gray-200 rounded-lg p-3"
-                      >
-                        <p className="text-xs text-gray-500 mb-1">
-                          {d.taskTitle}
-                        </p>
-                        <p className="text-sm text-gray-800 whitespace-pre-line">
-                          {d.performance}
-                        </p>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </section>
-              <section>
-                <h3 className="text-sm font-semibold text-gray-900 mb-2">
-                  동료 협업 기록
-                </h3>
-                {detailPeers.length === 0 ? (
-                  <p className="text-sm text-gray-400">동료 협업 기록이 없습니다.</p>
-                ) : (
-                  <ul className="space-y-2">
-                    {detailPeers.map((pr) => {
-                      const peer = members.find(
-                        (m) => m.memberId === pr.peerMemberId
-                      )
-                      return (
-                        <li
-                          key={pr.peerReportId}
-                          className="border border-gray-200 rounded-lg p-3"
-                        >
-                          <p className="text-xs font-medium text-gray-700 mb-1">
-                            {peer?.memberName ?? pr.peerMemberId}
-                          </p>
-                          <p className="text-sm text-gray-800 whitespace-pre-line">
-                            {pr.content ?? '—'}
-                          </p>
-                        </li>
-                      )
-                    })}
-                  </ul>
-                )}
-              </section>
+            <div className="px-6 py-4">
+              <textarea
+                value={tomorrowDraft}
+                onChange={(e) => setTomorrowDraft(e.target.value)}
+                rows={4}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                placeholder="내일 할 일을 입력하세요"
+              />
             </div>
-            <div className="px-6 py-4 border-t flex justify-end">
+            <div className="px-6 py-4 border-t flex justify-end gap-2">
               <button
                 type="button"
-                onClick={closeDetail}
+                onClick={() => setTomorrowModalReport(null)}
                 className="px-4 py-2 border border-gray-300 rounded-md text-sm hover:bg-gray-50"
               >
-                닫기
+                취소
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const value = tomorrowDraft.trim() || null
+                  setReports(allReports.map((r) =>
+                    r.reportId === tomorrowModalReport.reportId ? { ...r, tomorrowPlan: value } : r
+                  ))
+                  if (viewReport && viewReport.reportId === tomorrowModalReport.reportId) {
+                    setViewReport({ ...viewReport, tomorrowPlan: value })
+                  }
+                  setTomorrowModalReport(null)
+                }}
+                className="px-4 py-2 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600"
+              >
+                저장
               </button>
             </div>
           </div>
         </div>
       )}
+      <PeerReportModal
+        isOpen={!!peerModalReport}
+        onClose={() => setPeerModalReport(null)}
+        peerReports={peerReports}
+        teamMembers={teamMembers}
+        currentMemberId={currentMemberId}
+        onSave={handlePeerSave}
+        onUpdate={handlePeerUpdate}
+        onDelete={handlePeerDelete}
+        reportId={peerModalReport?.reportId ?? null}
+      />
     </div>
   )
 }

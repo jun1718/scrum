@@ -1,0 +1,7 @@
+{
+  "tool_name": "Read",
+  "tool_input_preview": "{\"file_path\":\"/Users/nhn/IdeaProjects/daily-scrum/src/context/MockDataContext.tsx\",\"limit\":80}",
+  "error": "File does not exist. Note: your current working directory is /Users/nhn/IdeaProjects/daily-scrum.",
+  "timestamp": "2026-03-13T09:08:10.916Z",
+  "retry_count": 1
+}

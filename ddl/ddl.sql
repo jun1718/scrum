@@ -53,6 +53,7 @@ CREATE TABLE report (
     sta_date          DATE         NOT NULL,
     end_date          DATE         NOT NULL,
     type              VARCHAR(20)  NOT NULL COMMENT 'daily | weekly | monthly | review',
+    tomorrow_plan     TEXT         NULL COMMENT '내일 할 일 (daily 전용)',
     created_at        DATETIME(3)  NOT NULL,
     created_member_id BIGINT       NOT NULL,
     updated_at        DATETIME(3)  NULL,
