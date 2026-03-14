@@ -13,6 +13,8 @@ interface ReportTableProps {
   onReportClick?: (report: Report) => void
   onView?: (report: Report) => void
   onPeerReport?: (report: Report) => void
+  onTomorrow?: (report: Report) => void
+  onPerformance?: (report: Report, detail: ReportDetail) => void
   tags?: Tag[]
 }
 
@@ -27,6 +29,8 @@ export function ReportTable({
   onReportClick,
   onView,
   onPeerReport,
+  onTomorrow,
+  onPerformance,
   tags = [],
 }: ReportTableProps) {
   const [expandedTag, setExpandedTag] = useState<{ reportId: number; tagId: number } | null>(null)
@@ -47,7 +51,7 @@ export function ReportTable({
   if (type === 'review') {
     return (
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200 select-none">
+        <table className="min-w-full divide-y divide-gray-300 select-none border border-gray-300">
           <thead className="bg-gray-50">
             <tr>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border-r border-gray-300">시작일</th>
@@ -59,7 +63,7 @@ export function ReportTable({
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">관리</th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-100">
+          <tbody className="bg-white divide-y divide-gray-300">
             {sorted.map((report) => {
               const rTags = getReportDetailTags(report.reportId)
               const totalTagHours = rTags.reduce((sum, rt) => sum + rt.workHours, 0)
@@ -73,7 +77,7 @@ export function ReportTable({
                   <td className="px-4 py-3 text-sm text-gray-400" colSpan={4}>—</td>
                   <td className="px-3 py-2">
                     {onDelete && (
-                      <button type="button" onClick={() => onDelete(report)} className="px-2 py-1 rounded border border-red-200 text-xs text-red-600 bg-red-50 hover:bg-red-100">삭제</button>
+                      <button type="button" onClick={() => onDelete(report)} className="w-full px-3 py-1.5 rounded border border-red-400 text-sm text-red-700 bg-red-50 hover:bg-red-100 font-medium whitespace-nowrap">삭제</button>
                     )}
                   </td>
                 </tr>
@@ -87,11 +91,11 @@ export function ReportTable({
                     <tr key={`${report.reportId}-${rt.reportDetailTagId}`}>
                       {idx === 0 && (
                         <>
-                          <td rowSpan={rowCount} className="px-4 py-3 text-sm text-gray-700 align-top border-r border-gray-100">{report.staDate}</td>
-                          <td rowSpan={rowCount} className="px-4 py-3 text-sm text-gray-700 align-top border-r border-gray-100">{report.endDate}</td>
+                          <td rowSpan={rowCount} className="px-4 py-3 text-sm text-gray-700 align-top border-r border-gray-300">{report.staDate}</td>
+                          <td rowSpan={rowCount} className="px-4 py-3 text-sm text-gray-700 align-top border-r border-gray-300">{report.endDate}</td>
                         </>
                       )}
-                      <td className="px-4 py-3 text-sm border-r border-gray-200">
+                      <td className="px-4 py-3 text-sm border-r border-gray-300">
                         <div className="flex items-center gap-2">
                           <span className="font-medium text-gray-900">{getTagName(rt.tagId)}</span>
                           <button
@@ -132,13 +136,13 @@ export function ReportTable({
                           </div>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-700 border-r border-gray-200">{rt.workHours}h</td>
-                      <td className="px-4 py-3 text-sm text-gray-700 border-r border-gray-200">{tagRate}%</td>
-                      <td className="px-4 py-3 text-sm text-gray-600 max-w-xs border-r border-gray-200 whitespace-pre-line">{rt.aiSummary || '—'}</td>
+                      <td className="px-4 py-3 text-sm text-gray-700 border-r border-gray-300">{rt.workHours}h</td>
+                      <td className="px-4 py-3 text-sm text-gray-700 border-r border-gray-300">{tagRate}%</td>
+                      <td className="px-4 py-3 text-sm text-gray-600 max-w-xs border-r border-gray-300 whitespace-pre-line">{rt.aiSummary || '—'}</td>
                       {idx === 0 && (
                         <td rowSpan={rowCount} className="px-3 py-2 align-middle">
                           {onDelete && (
-                            <button type="button" onClick={() => onDelete(report)} className="px-2 py-1 rounded border border-red-200 text-xs text-red-600 bg-red-50 hover:bg-red-100">삭제</button>
+                            <button type="button" onClick={() => onDelete(report)} className="w-full px-3 py-1.5 rounded border border-red-400 text-sm text-red-700 bg-red-50 hover:bg-red-100 font-medium whitespace-nowrap">삭제</button>
                           )}
                         </td>
                       )}
@@ -155,15 +159,16 @@ export function ReportTable({
 
   return (
     <div className="overflow-x-auto">
-      <table className={`min-w-full divide-y divide-gray-200 select-none${type === 'daily' ? ' table-fixed' : ''}`}>
+      <table className={`min-w-full divide-y divide-gray-300 select-none border border-gray-300${type === 'daily' ? ' table-fixed' : ''}`}>
         {type === 'daily' && (
           <colgroup>
             <col className="w-[10%]" />
             <col className="w-[6%]" />
-            <col className="w-[22%]" />
-            <col className="w-[8%]" />
-            <col className="w-[42%]" />
-            <col className="w-[12%]" />
+            <col className="w-[18%]" />
+            <col className="w-[10%]" />
+            <col className="w-[7%]" />
+            <col className="w-[34%]" />
+            <col className="w-[15%]" />
           </colgroup>
         )}
         <thead className="bg-gray-50">
@@ -192,11 +197,14 @@ export function ReportTable({
             </th>
             {type === 'daily' && (
               <>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border-r border-gray-300 whitespace-nowrap">
+                  업무 성과
+                </th>
                 <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase border-r border-gray-300 whitespace-nowrap">
                   투입률
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border-r border-gray-300">
-                  업무 내용
+                  해당 업무로 한 일
                 </th>
               </>
             )}
@@ -210,12 +218,12 @@ export function ReportTable({
                 AI 요약
               </th>
             )}
-            {(onEdit || onDelete || onPeerReport) && (
+            {(onEdit || onDelete || onPeerReport || onTomorrow) && (
               <th className="px-4 py-3"></th>
             )}
           </tr>
         </thead>
-        <tbody className="bg-white divide-y divide-gray-100">
+        <tbody className="bg-white divide-y divide-gray-300">
           {sorted.map((report) => {
             const details = getDetails(report.reportId)
             const reportDetailTags = getReportDetailTags(report.reportId)
@@ -230,7 +238,7 @@ export function ReportTable({
                 {type === 'daily' ? (
                   <>
                     <td className="px-4 py-3 text-sm text-gray-700 align-middle">{report.staDate}</td>
-                    <td className="px-4 py-3 text-sm text-gray-400 align-middle border-r border-gray-100">—</td>
+                    <td className="px-4 py-3 text-sm text-gray-400 align-middle border-r border-gray-300">—</td>
                   </>
                 ) : (
                   <>
@@ -238,34 +246,35 @@ export function ReportTable({
                     <td className="px-4 py-3 text-sm text-gray-700">{report.endDate}</td>
                   </>
                 )}
-                <td className="px-4 py-3 text-sm text-gray-400 border-r border-gray-200">—</td>
+                <td className="px-4 py-3 text-sm text-gray-400 border-r border-gray-300">—</td>
                 {type === 'daily' && (
                   <>
-                    <td className="px-4 py-3 text-sm text-gray-400 border-r border-gray-200">—</td>
-                    <td className="px-4 py-3 text-sm text-gray-400 border-r border-gray-200">—</td>
+                    <td className="px-4 py-3 text-sm text-gray-400 border-r border-gray-300">—</td>
+                    <td className="px-4 py-3 text-sm text-gray-400 border-r border-gray-300">—</td>
+                    <td className="px-4 py-3 text-sm text-gray-400 border-r border-gray-300">—</td>
                   </>
                 )}
                 {(type === 'weekly' || type === 'monthly') && (
                   <td className="px-4 py-3 text-sm">—</td>
                 )}
                 {showAiSummary && <td className="px-4 py-3 text-sm">—</td>}
-                {(onEdit || onDelete || onView || onPeerReport) && (
+                {(onEdit || onDelete || onView || onPeerReport || onTomorrow) && (
                   <td className="px-3 py-2 align-middle">
-                    <div className="flex flex-wrap gap-1 justify-start">
+                    <div className="flex flex-col gap-2.5">
                       {onView && (
                         <button
                           type="button"
                           onClick={(e) => { e.stopPropagation(); onView(report) }}
-                          className="px-2 py-1 rounded border border-gray-200 text-xs text-gray-600 bg-gray-50 hover:bg-gray-100"
+                          className="w-full px-3 py-1.5 rounded border border-gray-400 text-sm text-gray-700 bg-white hover:bg-gray-100 font-medium whitespace-nowrap"
                         >
-                          상세
+                          업무 상세 보기
                         </button>
                       )}
                       {onEdit && (
                         <button
                           type="button"
                           onClick={(e) => { e.stopPropagation(); onEdit(report) }}
-                          className="px-2 py-1 rounded border border-blue-200 text-xs text-blue-600 bg-blue-50 hover:bg-blue-100"
+                          className="w-full px-3 py-1.5 rounded border border-blue-400 text-sm text-blue-700 bg-blue-50 hover:bg-blue-100 font-medium whitespace-nowrap"
                         >
                           수정
                         </button>
@@ -274,7 +283,7 @@ export function ReportTable({
                         <button
                           type="button"
                           onClick={(e) => { e.stopPropagation(); onDelete(report) }}
-                          className="px-2 py-1 rounded border border-red-200 text-xs text-red-600 bg-red-50 hover:bg-red-100"
+                          className="w-full px-3 py-1.5 rounded border border-red-400 text-sm text-red-700 bg-red-50 hover:bg-red-100 font-medium whitespace-nowrap"
                         >
                           삭제
                         </button>
@@ -283,9 +292,18 @@ export function ReportTable({
                         <button
                           type="button"
                           onClick={(e) => { e.stopPropagation(); onPeerReport(report) }}
-                          className="px-2 py-1 rounded border border-purple-200 text-xs text-purple-600 bg-purple-50 hover:bg-purple-100"
+                          className="w-full px-3 py-1.5 rounded border border-purple-400 text-sm text-purple-700 bg-purple-50 hover:bg-purple-100 font-medium whitespace-nowrap"
                         >
-                          협업
+                          동료 협업 기록
+                        </button>
+                      )}
+                      {onTomorrow && (
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); onTomorrow(report) }}
+                          className="w-full px-3 py-1.5 rounded border border-green-400 text-sm text-green-700 bg-green-50 hover:bg-green-100 font-medium whitespace-nowrap"
+                        >
+                          내일 할 일
                         </button>
                       )}
                     </div>
@@ -302,25 +320,25 @@ export function ReportTable({
                   {idx === 0 && (
                     type === 'daily' ? (
                       <>
-                        <td rowSpan={rowCount} className="px-4 py-3 text-sm text-gray-700 align-middle border-r border-gray-100">
+                        <td rowSpan={rowCount} className="px-4 py-3 text-sm text-gray-700 align-middle border-r border-gray-300">
                           {report.staDate}
                         </td>
-                        <td rowSpan={rowCount} className="px-4 py-3 text-sm text-gray-700 align-middle border-r border-gray-100 text-center font-medium">
+                        <td rowSpan={rowCount} className="px-4 py-3 text-sm text-gray-700 align-middle border-r border-gray-300 text-center font-medium">
                           {totalHours}h
                         </td>
                       </>
                     ) : (
                       <>
-                        <td rowSpan={rowCount} className="px-4 py-3 text-sm text-gray-700 align-top border-r border-gray-100">
+                        <td rowSpan={rowCount} className="px-4 py-3 text-sm text-gray-700 align-top border-r border-gray-300">
                           {report.staDate}
                         </td>
-                        <td rowSpan={rowCount} className="px-4 py-3 text-sm text-gray-700 align-top border-r border-gray-100">
+                        <td rowSpan={rowCount} className="px-4 py-3 text-sm text-gray-700 align-top border-r border-gray-300">
                           {report.endDate}
                         </td>
                       </>
                     )
                   )}
-                  <td className="px-4 py-3 text-sm align-middle border-r border-gray-200">
+                  <td className="px-4 py-3 text-sm align-middle border-r border-gray-300">
                     {d.taskLink && d.taskLink !== '#' ? (
                       <a
                         href={d.taskLink}
@@ -337,17 +355,34 @@ export function ReportTable({
                   </td>
                   {type === 'daily' && (
                     <>
-                      <td className="px-4 py-3 text-sm align-middle text-center border-r border-gray-200">
+                      <td className="px-4 py-3 text-sm align-middle border-r border-gray-300">
+                        {onPerformance ? (
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); onPerformance(report, d) }}
+                            className={`w-full px-3 py-1.5 rounded border text-sm font-medium whitespace-nowrap ${
+                              d.performance
+                                ? 'border-blue-400 text-blue-700 bg-blue-50 hover:bg-blue-100'
+                                : 'border-orange-400 text-orange-700 bg-orange-50 hover:bg-orange-100'
+                            }`}
+                          >
+                            {d.performance ? '성과 수정' : '성과 입력'}
+                          </button>
+                        ) : (
+                          <span className="text-sm text-gray-500 whitespace-pre-line">{d.performance || '—'}</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-sm align-middle text-center border-r border-gray-300">
                         <span className="text-gray-700">{d.workHours}h</span>
                         <span className="text-gray-400 ml-1">({calcWorkRate(d.workHours, totalHours)}%)</span>
                       </td>
-                      <td className="px-4 py-3 text-sm align-middle text-gray-700 whitespace-pre-line border-r border-gray-200">
+                      <td className="px-4 py-3 text-sm align-middle text-gray-700 whitespace-pre-line border-r border-gray-300">
                         {d.done || '—'}
                       </td>
                     </>
                   )}
                   {(type === 'weekly' || type === 'monthly') && idx === 0 && (
-                    <td rowSpan={rowCount} className="px-4 py-3 text-sm align-top border-r border-gray-100">
+                    <td rowSpan={rowCount} className="px-4 py-3 text-sm align-top border-r border-gray-300">
                       <ul className="space-y-1">
                         {reportDetailTags.map((rt) => (
                           <li key={rt.reportDetailTagId}>태그#{rt.tagId}: {rt.workHours}h</li>
@@ -356,7 +391,7 @@ export function ReportTable({
                     </td>
                   )}
                   {showAiSummary && idx === 0 && (
-                    <td rowSpan={rowCount} className="px-4 py-3 text-sm text-gray-600 max-w-xs align-top border-r border-gray-100">
+                    <td rowSpan={rowCount} className="px-4 py-3 text-sm text-gray-600 max-w-xs align-top border-r border-gray-300">
                       {reportDetailTags.map((rt) =>
                         rt.aiSummary ? (
                           <div key={rt.reportDetailTagId} className="mb-2">{rt.aiSummary}</div>
@@ -364,23 +399,23 @@ export function ReportTable({
                       )}
                     </td>
                   )}
-                  {(onEdit || onDelete || onView || onPeerReport) && idx === 0 && (
+                  {(onEdit || onDelete || onView || onPeerReport || onTomorrow) && idx === 0 && (
                     <td rowSpan={rowCount} className="px-3 py-2 align-middle">
-                      <div className="flex flex-wrap gap-1 justify-start">
+                      <div className="flex flex-col gap-2.5">
                         {onView && (
                           <button
                             type="button"
                             onClick={(e) => { e.stopPropagation(); onView(report) }}
-                            className="px-2 py-1 rounded border border-gray-200 text-xs text-gray-600 bg-gray-50 hover:bg-gray-100"
+                            className="w-full px-3 py-1.5 rounded border border-gray-400 text-sm text-gray-700 bg-white hover:bg-gray-100 font-medium whitespace-nowrap"
                           >
-                            상세
+                            업무 상세 보기
                           </button>
                         )}
                         {onEdit && (
                           <button
                             type="button"
                             onClick={(e) => { e.stopPropagation(); onEdit(report) }}
-                            className="px-2 py-1 rounded border border-blue-200 text-xs text-blue-600 bg-blue-50 hover:bg-blue-100"
+                            className="w-full px-3 py-1.5 rounded border border-blue-400 text-sm text-blue-700 bg-blue-50 hover:bg-blue-100 font-medium whitespace-nowrap"
                           >
                             수정
                           </button>
@@ -389,7 +424,7 @@ export function ReportTable({
                           <button
                             type="button"
                             onClick={(e) => { e.stopPropagation(); onDelete(report) }}
-                            className="px-2 py-1 rounded border border-red-200 text-xs text-red-600 bg-red-50 hover:bg-red-100"
+                            className="w-full px-3 py-1.5 rounded border border-red-400 text-sm text-red-700 bg-red-50 hover:bg-red-100 font-medium whitespace-nowrap"
                           >
                             삭제
                           </button>
@@ -398,9 +433,18 @@ export function ReportTable({
                           <button
                             type="button"
                             onClick={(e) => { e.stopPropagation(); onPeerReport(report) }}
-                            className="px-2 py-1 rounded border border-purple-200 text-xs text-purple-600 bg-purple-50 hover:bg-purple-100"
+                            className="w-full px-3 py-1.5 rounded border border-purple-400 text-sm text-purple-700 bg-purple-50 hover:bg-purple-100 font-medium whitespace-nowrap"
                           >
-                            협업
+                            동료 협업 기록
+                          </button>
+                        )}
+                        {onTomorrow && (
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); onTomorrow(report) }}
+                            className="w-full px-3 py-1.5 rounded border border-green-400 text-sm text-green-700 bg-green-50 hover:bg-green-100 font-medium whitespace-nowrap"
+                          >
+                            내일 할 일
                           </button>
                         )}
                       </div>

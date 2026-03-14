@@ -8,6 +8,7 @@ import { ScrumRow, type ScrumRowData } from '@/components/ScrumRow'
 import type { Report, ReportType } from '@/types'
 
 const REPORT_TABS = [
+  { to: '/', label: '데일리 슈크럼 작성' },
   { to: '/reports/daily', label: '일간 보고' },
   { to: '/reports/weekly', label: '주간 보고' },
   { to: '/reports/monthly', label: '월간 보고' },
@@ -78,6 +79,8 @@ export function ReportListPage() {
   const [peerModalReport, setPeerModalReport] = useState<Report | null>(null)
   const [tomorrowModalReport, setTomorrowModalReport] = useState<Report | null>(null)
   const [tomorrowDraft, setTomorrowDraft] = useState('')
+  const [perfModalDetail, setPerfModalDetail] = useState<{ report: Report; detail: import('@/types').ReportDetail } | null>(null)
+  const [perfDraft, setPerfDraft] = useState('')
 
   const reportType = (type ?? 'daily') as ReportType
   const reports = myReports.filter((r) => r.type === reportType)
@@ -400,6 +403,14 @@ export function ReportListPage() {
             type={reportType}
             onView={reportType === 'daily' ? openView : undefined}
             onPeerReport={reportType === 'daily' ? (report) => setPeerModalReport(report) : undefined}
+            onTomorrow={reportType === 'daily' ? (report) => {
+              setTomorrowDraft(report.tomorrowPlan ?? '')
+              setTomorrowModalReport(report)
+            } : undefined}
+            onPerformance={reportType === 'daily' ? (report, detail) => {
+              setPerfDraft(detail.performance ?? '')
+              setPerfModalDetail({ report, detail })
+            } : undefined}
             tags={tags}
           />
         </div>
@@ -485,19 +496,7 @@ export function ReportListPage() {
                 </button>
               )}
             </div>
-            <div className="px-6 py-4 border-t flex justify-between items-center">
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setTomorrowDraft(viewReport?.tomorrowPlan ?? '')
-                    setTomorrowModalReport(viewReport)
-                  }}
-                  className="px-3 py-1.5 border border-green-300 text-green-700 rounded-md text-sm hover:bg-green-50"
-                >
-                  내일 할 일
-                </button>
-              </div>
+            <div className="px-6 py-4 border-t flex justify-end">
               <button
                 type="button"
                 onClick={closeView}
@@ -550,6 +549,60 @@ export function ReportListPage() {
                     setViewReport({ ...viewReport, tomorrowPlan: value })
                   }
                   setTomorrowModalReport(null)
+                }}
+                className="px-4 py-2 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600"
+              >
+                저장
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {perfModalDetail && (
+        <div className="fixed inset-0 bg-black/50 flex items-start justify-center pt-24 z-[60]">
+          <div className="bg-white rounded-xl shadow-xl max-w-lg w-full mx-4">
+            <div className="px-6 py-4 border-b flex justify-between items-center">
+              <h2 className="font-semibold text-lg">해당 업무 성과</h2>
+              <button
+                type="button"
+                onClick={() => setPerfModalDetail(null)}
+                className="text-gray-400 hover:text-gray-600 text-xl"
+              >
+                ×
+              </button>
+            </div>
+            <div className="px-6 py-4">
+              <p className="text-sm text-gray-500 mb-2">
+                업무: <span className="font-medium text-gray-700">{perfModalDetail.detail.taskTitle || '(제목 없음)'}</span>
+              </p>
+              <textarea
+                value={perfDraft}
+                onChange={(e) => setPerfDraft(e.target.value)}
+                rows={4}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                placeholder="이 업무에서 어필할 성과를 입력하세요"
+              />
+            </div>
+            <div className="px-6 py-4 border-t flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setPerfModalDetail(null)}
+                className="px-4 py-2 border border-gray-300 rounded-md text-sm hover:bg-gray-50"
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const value = perfDraft.trim() || null
+                  setReportDetails((prev) =>
+                    prev.map((d) =>
+                      d.reportDetailId === perfModalDetail.detail.reportDetailId
+                        ? { ...d, performance: value }
+                        : d
+                    )
+                  )
+                  setPerfModalDetail(null)
                 }}
                 className="px-4 py-2 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600"
               >

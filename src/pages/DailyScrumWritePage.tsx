@@ -1,14 +1,15 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useMockData } from '@/hooks/useMockData'
 
 const REPORT_TABS = [
+  { to: '/', label: '데일리 슈크럼 작성' },
   { to: '/reports/daily', label: '일간 보고' },
   { to: '/reports/weekly', label: '주간 보고' },
   { to: '/reports/monthly', label: '월간 보고' },
   { to: '/reports/review', label: '성과 보고' },
 ]
-import { ScrumRow, type ScrumRowData } from '@/components/ScrumRow'
+import { ScrumRow, type ScrumRowData, type ScrumRowErrors } from '@/components/ScrumRow'
 import { PeerReportModal } from '@/components/PeerReportModal'
 import { ApiSection, type ApiInfo } from '@/components/ApiTag'
 
@@ -92,6 +93,9 @@ export function DailyScrumWritePage() {
   const [peerModalOpen, setPeerModalOpen] = useState(false)
   const [tomorrowModalOpen, setTomorrowModalOpen] = useState(false)
   const [tomorrowDraft, setTomorrowDraft] = useState('')
+  const [validationErrors, setValidationErrors] = useState<Record<number, ScrumRowErrors>>({})
+  const [saveWarning, setSaveWarning] = useState(false)
+  const rowRefs = useRef<(HTMLDivElement | null)[]>([])
 
   const changeDate = (offset: number) => {
     const d = new Date(selectedDate)
@@ -119,13 +123,26 @@ export function DailyScrumWritePage() {
     [members, currentMemberId]
   )
 
-  const canSave =
-    rows.length > 0 &&
-    rows.every((r) => r.done.trim() !== '' && r.tagId != null) &&
-    rows.some((r) => r.done.trim() !== '')
-
   const handleSave = () => {
-    if (!canSave) return
+    const errors: Record<number, ScrumRowErrors> = {}
+    let firstErrorIndex = -1
+    rows.forEach((r, i) => {
+      const rowErr: ScrumRowErrors = {}
+      if (r.done.trim() === '') rowErr.done = true
+      if (r.tagId == null) rowErr.tagId = true
+      if (rowErr.done || rowErr.tagId) {
+        errors[i] = rowErr
+        if (firstErrorIndex === -1) firstErrorIndex = i
+      }
+    })
+    if (rows.length === 0 || firstErrorIndex !== -1) {
+      setValidationErrors(errors)
+      if (firstErrorIndex !== -1) {
+        rowRefs.current[firstErrorIndex]?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
+      return
+    }
+    setValidationErrors({})
     const newReportId = existingDaily
       ? existingDaily.reportId
       : Math.max(0, ...reports.map((r) => r.reportId)) + 1
@@ -248,6 +265,7 @@ export function DailyScrumWritePage() {
             <NavLink
               key={to}
               to={to}
+              end={to === '/'}
               className={({ isActive }: { isActive: boolean }) =>
                 `px-4 py-3 text-sm border-b-2 ${
                   isActive
@@ -285,7 +303,7 @@ export function DailyScrumWritePage() {
         </div>
       )}
 
-      <div className="p-6 space-y-4">
+      <div className="px-6 pt-3 pb-6 space-y-4">
         <ApiSection label="데일리 슈크럼 조회/저장" apis={DAILY_SCRUM_APIS}>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
@@ -311,32 +329,48 @@ export function DailyScrumWritePage() {
                 &rarr;
               </button>
             </div>
-            <div className="flex gap-2">
+            <div className="relative flex gap-2 items-center">
               <button
                 type="button"
                 onClick={() => {
+                  if (!existingDaily) {
+                    setSaveWarning(true)
+                    setTimeout(() => setSaveWarning(false), 3000)
+                    return
+                  }
                   setTomorrowDraft(tomorrowPlan)
                   setTomorrowModalOpen(true)
                 }}
-                className="px-3 py-1.5 border border-gray-300 rounded-md text-sm hover:bg-gray-50"
+                className="px-3 py-1.5 border border-green-400 rounded-md text-sm text-green-700 bg-green-50 hover:bg-green-100 font-medium"
               >
                 내일 할 일
               </button>
               <ApiSection label="동료 협업 CRUD" apis={PEER_REPORT_APIS}>
                 <button
                   type="button"
-                  onClick={() => setPeerModalOpen(true)}
-                  className="px-3 py-1.5 border border-gray-300 rounded-md text-sm hover:bg-gray-50"
+                  onClick={() => {
+                    if (!existingDaily) {
+                      setSaveWarning(true)
+                      setTimeout(() => setSaveWarning(false), 3000)
+                      return
+                    }
+                    setPeerModalOpen(true)
+                  }}
+                  className="px-3 py-1.5 border border-purple-400 rounded-md text-sm text-purple-700 bg-purple-50 hover:bg-purple-100 font-medium"
                 >
                   동료 협업 기록
                 </button>
               </ApiSection>
+              {saveWarning && (
+                <div className="absolute top-full left-0 mt-2 px-3 py-2 bg-amber-50 border border-amber-300 rounded-lg shadow-md text-sm text-amber-800 whitespace-nowrap animate-fade-in z-10">
+                  <span className="mr-1">⚠</span> 먼저 데일리 슈크럼을 저장해주세요.
+                </div>
+              )}
               {editing ? (
                 <button
                   type="button"
                   onClick={handleSave}
-                  disabled={!canSave}
-                  className="px-3 py-1.5 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-1.5 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600"
                 >
                   저장
                 </button>
@@ -365,12 +399,30 @@ export function DailyScrumWritePage() {
               {rows.map((row, i) => (
                 <ScrumRow
                   key={i}
+                  ref={(el) => { rowRefs.current[i] = el }}
                   row={row}
                   weeklyTags={weeklyTags}
-                  onChange={(next) => updateRow(i, next)}
+                  onChange={(next) => {
+                    updateRow(i, next)
+                    if (validationErrors[i]) {
+                      setValidationErrors((prev) => {
+                        const updated = { ...prev }
+                        const rowErr = { ...updated[i] }
+                        if (next.done.trim() !== '') delete rowErr.done
+                        if (next.tagId != null) delete rowErr.tagId
+                        if (!rowErr.done && !rowErr.tagId) {
+                          delete updated[i]
+                        } else {
+                          updated[i] = rowErr
+                        }
+                        return updated
+                      })
+                    }
+                  }}
                   onRemove={() => removeRow(i)}
                   getMonthlyTagName={getMonthlyTagName}
                   readOnly={!editing}
+                  errors={validationErrors[i]}
                 />
               ))}
               {editing && (

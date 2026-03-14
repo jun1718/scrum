@@ -33,8 +33,8 @@ function TeamShareLinks({ hasTeam }: { hasTeam: boolean }) {
               if (!hasTeam) { toast(NO_TEAM_MSG); return }
               navigate(`/team/share?tab=${tab}`)
             }}
-            className={`flex items-center gap-3 px-4 py-2 mx-2 rounded-md text-sm text-gray-700 hover:bg-gray-100 w-full text-left ${
-              isActive ? 'bg-blue-50 text-blue-600 font-medium' : ''
+            className={`flex items-center gap-3 px-4 py-2 mx-2 rounded-md text-sm hover:bg-gray-100 w-full text-left ${
+              isActive ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-700'
             }`}
           >
             <span className="w-4 h-4 text-gray-400">•</span>
@@ -175,8 +175,8 @@ export function NavPanel({ teamName, hasTeam = false }: NavPanelProps) {
                 key={to}
                 to={to}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-4 py-2 mx-2 rounded-md text-sm text-gray-700 hover:bg-gray-100 ${
-                    isActive ? 'bg-blue-50 text-blue-600 font-medium' : ''
+                  `flex items-center gap-3 px-4 py-2 mx-2 rounded-md text-sm hover:bg-gray-100 ${
+                    isActive ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-700'
                   }`
                 }
               >

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, forwardRef } from 'react'
 import type { Tag } from '@/types'
 import { TagSelector } from './TagSelector'
 
@@ -13,6 +13,11 @@ export interface ScrumRowData {
   monthlyTagName?: string | null
 }
 
+export interface ScrumRowErrors {
+  done?: boolean
+  tagId?: boolean
+}
+
 interface ScrumRowProps {
   row: ScrumRowData
   weeklyTags: Tag[]
@@ -20,16 +25,18 @@ interface ScrumRowProps {
   onRemove: () => void
   getMonthlyTagName: (weeklyTagId: number) => string | null
   readOnly?: boolean
+  errors?: ScrumRowErrors
 }
 
-export function ScrumRow({
+export const ScrumRow = forwardRef<HTMLDivElement, ScrumRowProps>(function ScrumRow({
   row,
   weeklyTags,
   onChange,
   onRemove,
   getMonthlyTagName,
   readOnly = false,
-}: ScrumRowProps) {
+  errors,
+}, ref) {
   const monthlyName = row.tagId ? getMonthlyTagName(row.tagId) : null
   const [performanceModalOpen, setPerformanceModalOpen] = useState(false)
   const [performanceDraft, setPerformanceDraft] = useState('')
@@ -45,7 +52,7 @@ export function ScrumRow({
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4 mb-3 relative">
+    <div ref={ref} className="bg-white rounded-lg border-2 border-gray-300 p-4 mb-3 relative">
       {!readOnly && (
         <button
           type="button"
@@ -112,12 +119,13 @@ export function ScrumRow({
         <textarea
           value={row.done}
           onChange={(e) => onChange({ ...row, done: e.target.value })}
-          className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-500"
+          className={`w-full border rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-500 ${errors?.done ? 'border-red-500' : 'border-gray-300'}`}
           rows={2}
           required
           placeholder="한 일 (필수)"
           disabled={readOnly}
         />
+        {errors?.done && <p className="text-xs text-red-500 mt-1">한 일을 입력해주세요</p>}
       </div>
       <div className="mt-3 grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
         <div>
@@ -152,7 +160,9 @@ export function ScrumRow({
             placeholder="선택"
             required
             disabled={readOnly}
+            error={errors?.tagId}
           />
+          {errors?.tagId && <p className="text-xs text-red-500 mt-1">태그를 선택해주세요</p>}
         </div>
         <div>
           <label className="block text-xs text-gray-500 mb-1">월간 보고 태그</label>
@@ -165,12 +175,13 @@ export function ScrumRow({
           <button
             type="button"
             onClick={openPerformanceModal}
-            disabled={readOnly}
-            className="w-full text-left border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-50 min-h-[38px] disabled:bg-gray-100 disabled:text-gray-500"
+            className={`w-full text-center border rounded-md px-3 py-2 text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[38px] ${
+              row.performance
+                ? 'border-blue-400 text-blue-700 bg-blue-50 hover:bg-blue-100'
+                : 'border-orange-400 text-orange-700 bg-orange-50 hover:bg-orange-100'
+            }`}
           >
-            <span className={row.performance ? 'text-gray-900' : 'text-gray-400'}>
-              {row.performance || '클릭하여 입력'}
-            </span>
+            {row.performance ? '성과 수정' : '성과 입력'}
           </button>
         </div>
       </div>
@@ -219,4 +230,4 @@ export function ScrumRow({
       )}
     </div>
   )
-}
+})

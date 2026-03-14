@@ -182,45 +182,45 @@
   },
   "hotPaths": [
     {
-      "path": "src/pages/ReportListPage.tsx",
-      "accessCount": 72,
-      "lastAccessed": 1773454791506,
-      "type": "file"
-    },
-    {
       "path": "src/components/ReportTable.tsx",
-      "accessCount": 68,
-      "lastAccessed": 1773454784001,
+      "accessCount": 126,
+      "lastAccessed": 1773457646219,
       "type": "file"
     },
     {
       "path": "src/pages/DailyScrumWritePage.tsx",
-      "accessCount": 63,
-      "lastAccessed": 1773453871653,
+      "accessCount": 93,
+      "lastAccessed": 1773458084515,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/ReportListPage.tsx",
+      "accessCount": 88,
+      "lastAccessed": 1773458210930,
       "type": "file"
     },
     {
       "path": "기획/19-페이지별-기능정의서.md",
-      "accessCount": 56,
-      "lastAccessed": 1773453682108,
+      "accessCount": 64,
+      "lastAccessed": 1773457873075,
       "type": "file"
     },
     {
       "path": "src/components/ScrumRow.tsx",
-      "accessCount": 25,
-      "lastAccessed": 1773454801291,
+      "accessCount": 53,
+      "lastAccessed": 1773458026784,
       "type": "file"
     },
     {
       "path": "src/types/index.ts",
-      "accessCount": 16,
-      "lastAccessed": 1773454090999,
+      "accessCount": 17,
+      "lastAccessed": 1773455944277,
       "type": "file"
     },
     {
       "path": "src/App.tsx",
-      "accessCount": 15,
-      "lastAccessed": 1773449685865,
+      "accessCount": 16,
+      "lastAccessed": 1773458216523,
       "type": "file"
     },
     {
@@ -231,8 +231,14 @@
     },
     {
       "path": "src/components/TagSelector.tsx",
-      "accessCount": 8,
-      "lastAccessed": 1773395423955,
+      "accessCount": 12,
+      "lastAccessed": 1773456066485,
+      "type": "directory"
+    },
+    {
+      "path": "src",
+      "accessCount": 12,
+      "lastAccessed": 1773458203153,
       "type": "directory"
     },
     {
@@ -240,12 +246,6 @@
       "accessCount": 8,
       "lastAccessed": 1773449697064,
       "type": "file"
-    },
-    {
-      "path": "src",
-      "accessCount": 8,
-      "lastAccessed": 1773454843783,
-      "type": "directory"
     },
     {
       "path": "src/components/PeerReportModal.tsx",
@@ -339,8 +339,8 @@
     },
     {
       "path": "src/components/Layout.tsx",
-      "accessCount": 1,
-      "lastAccessed": 1773395632711,
+      "accessCount": 2,
+      "lastAccessed": 1773458267624,
       "type": "file"
     },
     {
