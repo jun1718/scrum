@@ -78,9 +78,13 @@ export function ScrumRow({
               onChange={(e) => onChange({ ...row, taskLink: e.target.value })}
               onBlur={(e) => {
                 const v = e.target.value.trim()
-                if (v && !/^https:\/\/nhnent\.dooray\.com\/project\/tasks\/\d+$/.test(v)) {
+                if (!v) return
+                const match = v.match(/\/tasks\/(\d+)$/)
+                if (!match || !/^https:\/\/nhnent\.dooray\.com\/project\/tasks\/\d+$/.test(v)) {
                   alert('업무 링크는 https://nhnent.dooray.com/project/tasks/{taskId} 형식만 가능합니다.')
-                  onChange({ ...row, taskLink: '' })
+                  onChange({ ...row, taskLink: '', taskId: 0 })
+                } else {
+                  onChange({ ...row, taskLink: v, taskId: Number(match[1]) })
                 }
               }}
               className="flex-1 min-w-0 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-500"

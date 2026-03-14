@@ -41,9 +41,9 @@
         "workRatio": 50.0
       }
     ],
-    "reportTags": [
+    "reportDetailTags": [
       {
-        "reportTagId": 4000000000001,
+        "reportDetailTagId": 4000000000001,
         "tagId": 1234567890001,
         "tagName": "프로젝트A",
         "totalWorkHours": 30.0,

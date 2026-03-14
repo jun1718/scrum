@@ -23,7 +23,7 @@ This repository is currently in the **planning phase**. It contains planning doc
 mysql -u <user> -p <database> < ddl/ddl.sql
 ```
 
-7 tables: `team`, `member`, `tag`, `report`, `report_detail`, `peer_report`, `report_tag`. All tables share common columns: `created_at`, `created_member_id`, `updated_at`, `updated_member_id`, `note`.
+7 tables: `team`, `member`, `tag`, `report`, `report_detail`, `peer_report`, `report_detail_tag`. All tables share common columns: `created_at`, `created_member_id`, `updated_at`, `updated_member_id`, `note`.
 
 Schema reference: `기획/06-테이블-및-DDL참고.md`
 
@@ -49,7 +49,7 @@ Daily Scrum (user input) → Daily Report
 
 - One member belongs to one team (multi-team is future scope)
 - `tag` hierarchy: `parent_tag_id = NULL` → monthly tag; with parent → weekly tag
-- `report_tag` is a denormalized table caching tag-wise aggregations and AI summaries
+- `report_detail_tag` is a denormalized table for **review (performance) reports only**, caching tag-wise workHours and AI summaries (re-summarized from monthly reportDetail.ai_summary via Claude API); weekly/monthly tag workHours are computed via SUM at query time
 - Batch jobs run one transaction per member to prevent partial failures
 - Dooray API calls are proxied through the backend (WAS), not called directly from frontend
 

@@ -41,7 +41,7 @@ export function DailyScrumWritePage() {
     peerReports,
     setReports,
     setReportDetails,
-    setReportTags,
+    setReportDetailTags,
     setPeerReports,
     detailsByReportId,
     members,
@@ -156,11 +156,13 @@ export function DailyScrumWritePage() {
     rows.forEach((row, i) => {
       if (!row.done.trim() || row.tagId == null) return
       const detailId = maxDetailId + i + 1
+      const linkMatch = row.taskLink.match(/\/tasks\/(\d+)$/)
+      const extractedTaskId = linkMatch ? Number(linkMatch[1]) : row.taskId || detailId
       newDetails.push({
         reportDetailId: detailId,
         reportId: newReportId,
         tagId: row.tagId,
-        taskId: row.taskId || detailId,
+        taskId: extractedTaskId,
         taskTitle: row.taskTitle || '직접 입력',
         taskLink: row.taskLink || '#',
         done: row.done,
@@ -182,7 +184,7 @@ export function DailyScrumWritePage() {
     const reportId = existingDaily.reportId
     setReports(reports.filter((r) => r.reportId !== reportId))
     setReportDetails(reportDetails.filter((d) => d.reportId !== reportId))
-    setReportTags((prev) => prev.filter((rt) => rt.reportId !== reportId))
+    setReportDetailTags((prev) => prev.filter((rt) => rt.reportId !== reportId))
     setPeerReports(peerReports.filter((p) => p.reportId !== reportId))
     setRows([emptyRow])
     setEditing(true)

@@ -50,6 +50,7 @@ export interface ReportDetail {
   done: string
   workHours: number
   performance: string | null
+  aiSummary?: string | null
   createdAt: string
   createdMemberId: number
 }
@@ -63,19 +64,19 @@ export interface PeerReport {
   createdMemberId: number
 }
 
-export interface ReportTag {
-  reportTagId: number
+export interface ReportDetailTag {
+  reportDetailTagId: number
   reportId: number
   tagId: number
   workHours: number
-  type: 'weekly' | 'monthly' | 'review'
-  aiSummaryContent: string | null
+  type: 'review'
+  aiSummary: string | null
   createdAt: string
   createdMemberId: number
 }
 
 export type ReportWithDetails = Report & {
   details?: ReportDetail[]
-  reportTags?: ReportTag[]
+  reportDetailTags?: ReportDetailTag[]
   peerReports?: PeerReport[]
 }

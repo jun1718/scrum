@@ -73,6 +73,7 @@ CREATE TABLE report_detail (
     done              TEXT         NOT NULL COMMENT '해당 업무로 한 일',
     work_hours        DECIMAL(10,2) NOT NULL,
     performance       TEXT         NULL COMMENT '어필할 성과',
+    ai_summary        TEXT         NULL COMMENT '업무별 AI 요약',
     created_at        DATETIME(3)  NOT NULL,
     created_member_id BIGINT       NOT NULL,
     updated_at        DATETIME(3)  NULL,
@@ -99,14 +100,14 @@ CREATE TABLE peer_report (
     FOREIGN KEY (peer_member_id) REFERENCES member(member_id)
 );
 
--- report_tag (주/월/성과 보고 태그별 반정규화, reportId=새로 생성한 report)
-CREATE TABLE report_tag (
-    report_tag_id     BIGINT       NOT NULL PRIMARY KEY,
+-- report_detail_tag (성과보고 전용, 태그별 투입률·AI 요약 캐싱)
+CREATE TABLE report_detail_tag (
+    report_detail_tag_id BIGINT    NOT NULL PRIMARY KEY,
     report_id         BIGINT       NOT NULL,
     tag_id            BIGINT       NOT NULL,
-    work_hours        DECIMAL(10,2) NOT NULL,
-    type              VARCHAR(20)  NOT NULL COMMENT 'weekly | monthly | review',
-    ai_summary_content TEXT        NULL COMMENT 'monthly, review 시 AI 요약',
+    work_hours        DECIMAL(10,2) NOT NULL COMMENT '태그별 투입시간 합산 (캐싱)',
+    type              VARCHAR(20)  NOT NULL COMMENT 'review',
+    ai_summary        TEXT         NULL COMMENT '성과보고 시 태그별 AI 요약',
     created_at        DATETIME(3)  NOT NULL,
     created_member_id BIGINT       NOT NULL,
     updated_at        DATETIME(3)  NULL,

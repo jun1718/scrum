@@ -182,39 +182,51 @@
   },
   "hotPaths": [
     {
-      "path": "src/pages/DailyScrumWritePage.tsx",
-      "accessCount": 55,
-      "lastAccessed": 1773399908665,
+      "path": "src/pages/ReportListPage.tsx",
+      "accessCount": 72,
+      "lastAccessed": 1773454791506,
       "type": "file"
     },
     {
       "path": "src/components/ReportTable.tsx",
-      "accessCount": 51,
-      "lastAccessed": 1773399720731,
+      "accessCount": 68,
+      "lastAccessed": 1773454784001,
       "type": "file"
     },
     {
-      "path": "src/pages/ReportListPage.tsx",
-      "accessCount": 46,
-      "lastAccessed": 1773400162762,
+      "path": "src/pages/DailyScrumWritePage.tsx",
+      "accessCount": 63,
+      "lastAccessed": 1773453871653,
       "type": "file"
     },
     {
       "path": "기획/19-페이지별-기능정의서.md",
-      "accessCount": 41,
-      "lastAccessed": 1773399673658,
+      "accessCount": 56,
+      "lastAccessed": 1773453682108,
       "type": "file"
     },
     {
       "path": "src/components/ScrumRow.tsx",
-      "accessCount": 17,
-      "lastAccessed": 1773397783839,
+      "accessCount": 25,
+      "lastAccessed": 1773454801291,
+      "type": "file"
+    },
+    {
+      "path": "src/types/index.ts",
+      "accessCount": 16,
+      "lastAccessed": 1773454090999,
       "type": "file"
     },
     {
       "path": "src/App.tsx",
+      "accessCount": 15,
+      "lastAccessed": 1773449685865,
+      "type": "file"
+    },
+    {
+      "path": "src/context/MockDataProvider.tsx",
       "accessCount": 14,
-      "lastAccessed": 1773395657725,
+      "lastAccessed": 1773454847998,
       "type": "file"
     },
     {
@@ -225,21 +237,63 @@
     },
     {
       "path": "src/pages/TeamManagePage.tsx",
-      "accessCount": 7,
-      "lastAccessed": 1773393143394,
-      "type": "file"
-    },
-    {
-      "path": "src/components/PeerReportModal.tsx",
-      "accessCount": 6,
-      "lastAccessed": 1773395417668,
+      "accessCount": 8,
+      "lastAccessed": 1773449697064,
       "type": "file"
     },
     {
       "path": "src",
-      "accessCount": 4,
-      "lastAccessed": 1773399507990,
+      "accessCount": 8,
+      "lastAccessed": 1773454843783,
       "type": "directory"
+    },
+    {
+      "path": "src/components/PeerReportModal.tsx",
+      "accessCount": 7,
+      "lastAccessed": 1773449694714,
+      "type": "file"
+    },
+    {
+      "path": "기획/api/28-GET-reports-review.md",
+      "accessCount": 7,
+      "lastAccessed": 1773452239957,
+      "type": "file"
+    },
+    {
+      "path": "기획/api/24-GET-reports-monthly.md",
+      "accessCount": 6,
+      "lastAccessed": 1773449760988,
+      "type": "file"
+    },
+    {
+      "path": "기획/api/20-GET-reports-weekly.md",
+      "accessCount": 5,
+      "lastAccessed": 1773449914828,
+      "type": "file"
+    },
+    {
+      "path": "기획/api/30-PUT-reports-review-reportId.md",
+      "accessCount": 5,
+      "lastAccessed": 1773452240094,
+      "type": "file"
+    },
+    {
+      "path": "기획/api/26-PUT-reports-monthly-reportId.md",
+      "accessCount": 4,
+      "lastAccessed": 1773449766850,
+      "type": "file"
+    },
+    {
+      "path": "기획/api/33-GET-teams-teamId-reports-weekly.md",
+      "accessCount": 4,
+      "lastAccessed": 1773449773479,
+      "type": "file"
+    },
+    {
+      "path": "기획/api/34-GET-teams-teamId-reports-monthly.md",
+      "accessCount": 4,
+      "lastAccessed": 1773449775516,
+      "type": "file"
     },
     {
       "path": "src/components/TopHeader.tsx",
@@ -254,15 +308,33 @@
       "type": "file"
     },
     {
-      "path": "src/types/index.ts",
+      "path": "기획/api/00-API-INDEX.md",
       "accessCount": 3,
-      "lastAccessed": 1773399556610,
+      "lastAccessed": 1773452239248,
       "type": "file"
     },
     {
-      "path": "src/context/MockDataProvider.tsx",
+      "path": "기획/api/11-GET-reports-daily.md",
       "accessCount": 2,
-      "lastAccessed": 1773392908960,
+      "lastAccessed": 1773449706033,
+      "type": "file"
+    },
+    {
+      "path": "기획/api/12-POST-reports-daily.md",
+      "accessCount": 2,
+      "lastAccessed": 1773449706303,
+      "type": "file"
+    },
+    {
+      "path": "기획/api/29-POST-reports-review.md",
+      "accessCount": 2,
+      "lastAccessed": 1773452240009,
+      "type": "file"
+    },
+    {
+      "path": "기획/api/31-DELETE-reports-review-reportId.md",
+      "accessCount": 2,
+      "lastAccessed": 1773452240151,
       "type": "file"
     },
     {
@@ -332,18 +404,6 @@
       "type": "file"
     },
     {
-      "path": "기획/api/11-GET-reports-daily.md",
-      "accessCount": 1,
-      "lastAccessed": 1773396001316,
-      "type": "file"
-    },
-    {
-      "path": "기획/api/12-POST-reports-daily.md",
-      "accessCount": 1,
-      "lastAccessed": 1773396013043,
-      "type": "file"
-    },
-    {
       "path": "기획/api/13-PUT-reports-daily-reportId.md",
       "accessCount": 1,
       "lastAccessed": 1773396027189,
@@ -386,12 +446,6 @@
       "type": "file"
     },
     {
-      "path": "기획/api/20-GET-reports-weekly.md",
-      "accessCount": 1,
-      "lastAccessed": 1773396083496,
-      "type": "file"
-    },
-    {
       "path": "기획/api/21-POST-reports-weekly.md",
       "accessCount": 1,
       "lastAccessed": 1773396091676,
@@ -410,21 +464,9 @@
       "type": "file"
     },
     {
-      "path": "기획/api/24-GET-reports-monthly.md",
-      "accessCount": 1,
-      "lastAccessed": 1773396115304,
-      "type": "file"
-    },
-    {
       "path": "기획/api/25-POST-reports-monthly.md",
       "accessCount": 1,
       "lastAccessed": 1773396122416,
-      "type": "file"
-    },
-    {
-      "path": "기획/api/26-PUT-reports-monthly-reportId.md",
-      "accessCount": 1,
-      "lastAccessed": 1773396129250,
       "type": "file"
     },
     {
@@ -434,51 +476,9 @@
       "type": "file"
     },
     {
-      "path": "기획/api/28-GET-reports-review.md",
-      "accessCount": 1,
-      "lastAccessed": 1773396144240,
-      "type": "file"
-    },
-    {
-      "path": "기획/api/29-POST-reports-review.md",
-      "accessCount": 1,
-      "lastAccessed": 1773396151839,
-      "type": "file"
-    },
-    {
-      "path": "기획/api/30-PUT-reports-review-reportId.md",
-      "accessCount": 1,
-      "lastAccessed": 1773396159049,
-      "type": "file"
-    },
-    {
-      "path": "기획/api/31-DELETE-reports-review-reportId.md",
-      "accessCount": 1,
-      "lastAccessed": 1773396164443,
-      "type": "file"
-    },
-    {
       "path": "기획/api/32-GET-teams-teamId-reports-daily.md",
       "accessCount": 1,
       "lastAccessed": 1773396174895,
-      "type": "file"
-    },
-    {
-      "path": "기획/api/33-GET-teams-teamId-reports-weekly.md",
-      "accessCount": 1,
-      "lastAccessed": 1773396185055,
-      "type": "file"
-    },
-    {
-      "path": "기획/api/34-GET-teams-teamId-reports-monthly.md",
-      "accessCount": 1,
-      "lastAccessed": 1773396192677,
-      "type": "file"
-    },
-    {
-      "path": "기획/api/00-API-INDEX.md",
-      "accessCount": 1,
-      "lastAccessed": 1773396210350,
       "type": "file"
     }
   ],

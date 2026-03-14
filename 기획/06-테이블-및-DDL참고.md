@@ -26,7 +26,7 @@
 
 ## member
 
-- **memberId** (PK), **teamId** (FK → team, NULLABLE), **doorayMemberId** (NOT BLANK, Dooray id), **memberName** (NOT BLANK) + 공통 컬럼.
+- **memberId** (PK), **teamId** (FK → team, NULLABLE), **doorayMemberId** (NOT BLANK, Dooray id), **memberName** (NOT BLANK), **managerYn** (관리자 여부, Y/N, NOT NULL DEFAULT 'N') + 공통 컬럼.
 - 로그인·Member 조회/생성은 05 인증 참고. memberLoginId/memberPassword 없음.
 
 ---
@@ -48,6 +48,7 @@
 | memberId | FK → member |
 | staDate, endDate | NOT BLANK |
 | type | **daily** \| weekly \| monthly \| review (NOT BLANK) |
+| tomorrowPlan | 내일 할 일 (daily 전용, Nullable) |
 
 ---
 
@@ -80,9 +81,12 @@
 
 ---
 
-## reportTag
+## report_detail_tag
 
-- 월간보고/성과보고 태그별 반정규화(캐싱). **reportId**는 주/월/성과용으로 **새로 생성한 report**를 가리킴(기존 데일리 reportId 재사용 아님. 월별 동일 업무 2달 이상 가능하므로). **workHours**, **type** (weekly | monthly | review), **aiSummaryContent** (monthly/review 시 값).
+- **성과보고(review) 전용** 태그별 반정규화(캐싱) 테이블. 성과 보고 생성 시 태그 내 모든 reportDetail의 aiSummary + performance를 Claude API로 요약 → 태그별 **aiSummary**(500자 내외) 및 **workHours**(태그별 투입시간) 캐싱 저장.
+- **reportId**는 성과보고용으로 **새로 생성한 report**를 가리킴(기존 데일리 reportId 재사용 아님).
+- **type**: `review` 전용 (주간/월간의 태그별 workHours는 조회 시 SUM 계산하므로 캐싱 안 함).
+- 컬럼: **report_detail_tag_id** (PK), **report_id** (FK → report), **tag_id** (FK → tag), **work_hours**, **type** (review), **ai_summary** (성과보고 태그별 AI 요약 결과).
 
 ---
 

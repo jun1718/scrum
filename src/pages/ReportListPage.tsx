@@ -21,11 +21,11 @@ export function ReportListPage() {
     myReports,
     members,
     detailsByReportId,
-    reportTagsByReportId,
+    reportDetailTagsByReportId,
     setReports,
     reportDetails,
     setReportDetails,
-    setReportTags,
+    setReportDetailTags,
     peerReports,
     setPeerReports,
     currentMemberId: rawMemberId,
@@ -38,6 +38,35 @@ export function ReportListPage() {
     if (!tag?.parentTagId) return null
     const parent = tags.find((t) => t.tagId === tag.parentTagId)
     return parent?.tagName ?? null
+  }
+
+  /** 동일 업무 합치기 (task_id 기준) — 주간/월간/성과 공통 */
+  const mergeDetailsByTaskId = (details: import('@/types').ReportDetail[]) => {
+    const map = new Map<number, { taskId: number; taskTitle: string; taskLink: string; tagId: number; done: string; workHours: number; performance: string | null; aiSummary: string | null }>()
+    for (const d of details) {
+      const existing = map.get(d.taskId)
+      if (existing) {
+        existing.workHours += d.workHours
+        existing.done = [existing.done, d.done].filter(Boolean).join('\n\n')
+        existing.performance = [existing.performance, d.performance].filter(Boolean).join('\n\n') || null
+        existing.aiSummary = [existing.aiSummary, d.aiSummary].filter(Boolean).join('\n\n') || null
+        existing.taskTitle = d.taskTitle
+        existing.taskLink = d.taskLink
+        existing.tagId = d.tagId
+      } else {
+        map.set(d.taskId, {
+          taskId: d.taskId,
+          taskTitle: d.taskTitle,
+          taskLink: d.taskLink,
+          tagId: d.tagId,
+          done: d.done,
+          workHours: d.workHours,
+          performance: d.performance || null,
+          aiSummary: d.aiSummary || null,
+        })
+      }
+    }
+    return Array.from(map.values())
   }
 
   const currentMemberId = rawMemberId!
@@ -54,9 +83,9 @@ export function ReportListPage() {
   const reports = myReports.filter((r) => r.type === reportType)
 
   const getDetails = (reportId: number) => detailsByReportId[reportId] ?? []
-  const getReportTags = (reportId: number) => reportTagsByReportId[reportId] ?? []
+  const getReportDetailTags = (reportId: number) => reportDetailTagsByReportId[reportId] ?? []
 
-  const showAiSummary = reportType === 'monthly' || reportType === 'review'
+  const showAiSummary = reportType === 'weekly' || reportType === 'monthly' || reportType === 'review'
 
   const openView = (report: Report) => {
     if (report.type !== 'daily') return
@@ -109,7 +138,7 @@ export function ReportListPage() {
     if (!confirm('삭제하시겠습니까?')) return
     setReports(allReports.filter((r) => r.reportId !== report.reportId))
     setReportDetails((prev) => prev.filter((d) => d.reportId !== report.reportId))
-    setReportTags((prev) => prev.filter((rt) => rt.reportId !== report.reportId))
+    setReportDetailTags((prev) => prev.filter((rt) => rt.reportId !== report.reportId))
   }
 
   const teamMembers = useMemo(
@@ -141,7 +170,33 @@ export function ReportListPage() {
   }
 
   const handleCreateReview = (staDate: string, endDate: string) => {
+    const monthly = myReports.filter(
+      (r) => r.type === 'monthly' && r.staDate >= staDate && r.endDate <= endDate
+    )
+    if (monthly.length === 0) {
+      alert('해당 기간의 월간 보고가 없습니다.')
+      return
+    }
+    const monthlyDetails = monthly.flatMap((r) => detailsByReportId[r.reportId] ?? [])
+    const merged = mergeDetailsByTaskId(monthlyDetails)
+
     const newId = Math.max(0, ...allReports.map((r) => r.reportId)) + 1
+    const maxDetailId = Math.max(0, ...reportDetails.map((d) => d.reportDetailId))
+    const newDetails = merged.map((m, i) => ({
+      reportDetailId: maxDetailId + i + 1,
+      reportId: newId,
+      tagId: m.tagId,
+      taskId: m.taskId,
+      taskTitle: m.taskTitle,
+      taskLink: m.taskLink,
+      done: m.done,
+      workHours: m.workHours,
+      performance: m.performance,
+      aiSummary: m.aiSummary ?? '성과 업무별 AI 요약 (mock)',
+      createdAt: new Date().toISOString(),
+      createdMemberId: currentMemberId,
+    }))
+
     setReports([
       ...allReports,
       {
@@ -154,21 +209,35 @@ export function ReportListPage() {
         createdMemberId: currentMemberId,
       },
     ])
-    setReportTags((prev) => {
-      const nextId = Math.max(0, ...prev.map((rt) => rt.reportTagId)) + 1
-      return [
-        ...prev,
-        {
-          reportTagId: nextId,
-        reportId: newId,
-        tagId: 1,
-        workHours: 0,
-        type: 'review',
-        aiSummaryContent: '성과 보고 AI 요약 (mock)',
-        createdAt: new Date().toISOString(),
-        createdMemberId: currentMemberId,
-        },
-      ]
+    setReportDetails((prev) => [...prev, ...newDetails])
+
+    // 태그별 공수 합산 + 태그별 AI 요약 → report_detail_tag 생성
+    const tagMap = new Map<number, { workHours: number; tasks: typeof newDetails }>()
+    for (const d of newDetails) {
+      const existing = tagMap.get(d.tagId)
+      if (existing) {
+        existing.workHours += d.workHours
+        existing.tasks.push(d)
+      } else {
+        tagMap.set(d.tagId, { workHours: d.workHours, tasks: [d] })
+      }
+    }
+    setReportDetailTags((prev) => {
+      let nextId = Math.max(0, ...prev.map((rt) => rt.reportDetailTagId)) + 1
+      const newTags = Array.from(tagMap.entries()).map(([tagId, { workHours }]) => {
+        const tagName = tags.find((t) => t.tagId === tagId)?.tagName ?? `태그#${tagId}`
+        return {
+          reportDetailTagId: nextId++,
+          reportId: newId,
+          tagId,
+          workHours,
+          type: 'review' as const,
+          aiSummary: `[${tagName}] 태그별 성과 AI 요약 (mock)`,
+          createdAt: new Date().toISOString(),
+          createdMemberId: currentMemberId,
+        }
+      })
+      return [...prev, ...newTags]
     })
   }
 
@@ -187,7 +256,26 @@ export function ReportListPage() {
     )
     const staDate = sortedDaily[0].staDate
     const endDate = sortedDaily[sortedDaily.length - 1].endDate
+    const dailyDetails = daily.flatMap((r) => detailsByReportId[r.reportId] ?? [])
+    const merged = mergeDetailsByTaskId(dailyDetails)
+
     const newId = Math.max(0, ...allReports.map((r) => r.reportId)) + 1
+    const maxDetailId = Math.max(0, ...reportDetails.map((d) => d.reportDetailId))
+    const newDetails = merged.map((m, i) => ({
+      reportDetailId: maxDetailId + i + 1,
+      reportId: newId,
+      tagId: m.tagId,
+      taskId: m.taskId,
+      taskTitle: m.taskTitle,
+      taskLink: m.taskLink,
+      done: m.done,
+      workHours: m.workHours,
+      performance: m.performance,
+      aiSummary: '주간 AI 요약 (mock)',
+      createdAt: new Date().toISOString(),
+      createdMemberId: currentMemberId,
+    }))
+
     setReports([
       ...allReports,
       {
@@ -200,20 +288,40 @@ export function ReportListPage() {
         createdMemberId: currentMemberId,
       },
     ])
+    setReportDetails((prev) => [...prev, ...newDetails])
   }
 
   const handleCreateMonthly = () => {
-    const daily = myReports.filter((r) => r.type === 'daily')
-    if (daily.length === 0) {
-      alert('생성할 데일리 보고가 없습니다.')
+    const weekly = myReports.filter((r) => r.type === 'weekly')
+    if (weekly.length === 0) {
+      alert('생성할 주간 보고가 없습니다.')
       return
     }
-    const sortedDaily = [...daily].sort(
+    const sortedWeekly = [...weekly].sort(
       (a, b) => new Date(a.staDate).getTime() - new Date(b.staDate).getTime()
     )
-    const staDate = sortedDaily[0].staDate
-    const endDate = sortedDaily[sortedDaily.length - 1].endDate
+    const staDate = sortedWeekly[0].staDate
+    const endDate = sortedWeekly[sortedWeekly.length - 1].endDate
+    const weeklyDetails = weekly.flatMap((r) => detailsByReportId[r.reportId] ?? [])
+    const merged = mergeDetailsByTaskId(weeklyDetails)
+
     const newId = Math.max(0, ...allReports.map((r) => r.reportId)) + 1
+    const maxDetailId = Math.max(0, ...reportDetails.map((d) => d.reportDetailId))
+    const newDetails = merged.map((m, i) => ({
+      reportDetailId: maxDetailId + i + 1,
+      reportId: newId,
+      tagId: m.tagId,
+      taskId: m.taskId,
+      taskTitle: m.taskTitle,
+      taskLink: m.taskLink,
+      done: m.done,
+      workHours: m.workHours,
+      performance: m.performance,
+      aiSummary: m.aiSummary ?? '월간 AI 요약 (mock)',
+      createdAt: new Date().toISOString(),
+      createdMemberId: currentMemberId,
+    }))
+
     setReports([
       ...allReports,
       {
@@ -226,6 +334,7 @@ export function ReportListPage() {
         createdMemberId: currentMemberId,
       },
     ])
+    setReportDetails((prev) => [...prev, ...newDetails])
   }
 
   return (
@@ -285,12 +394,13 @@ export function ReportListPage() {
           <ReportTable
             reports={reports}
             getDetails={getDetails}
-            getReportTags={getReportTags}
+            getReportDetailTags={getReportDetailTags}
             showAiSummary={showAiSummary}
             onDelete={reportType !== 'daily' ? handleDelete : undefined}
             type={reportType}
             onView={reportType === 'daily' ? openView : undefined}
             onPeerReport={reportType === 'daily' ? (report) => setPeerModalReport(report) : undefined}
+            tags={tags}
           />
         </div>
       </div>

@@ -15,7 +15,7 @@ import type {
   Report,
   ReportDetail,
   PeerReport,
-  ReportTag,
+  ReportDetailTag,
 } from '@/types'
 
 const STORAGE_KEYS = {
@@ -25,7 +25,7 @@ const STORAGE_KEYS = {
   reports: 'scrum_reports',
   reportDetails: 'scrum_reportDetails',
   peerReports: 'scrum_peerReports',
-  reportTags: 'scrum_reportTags',
+  reportDetailTags: 'scrum_reportDetailTags',
   currentMemberId: 'scrum_currentMemberId',
   currentTeamId: 'scrum_currentTeamId',
 } as const
@@ -52,14 +52,14 @@ export interface MockDataContextValue {
   reports: Report[]
   reportDetails: ReportDetail[]
   peerReports: PeerReport[]
-  reportTags: ReportTag[]
+  reportDetailTags: ReportDetailTag[]
   setTeams: Dispatch<SetStateAction<Team[]>>
   setMembers: Dispatch<SetStateAction<Member[]>>
   setTags: Dispatch<SetStateAction<Tag[]>>
   setReports: Dispatch<SetStateAction<Report[]>>
   setReportDetails: Dispatch<SetStateAction<ReportDetail[]>>
   setPeerReports: Dispatch<SetStateAction<PeerReport[]>>
-  setReportTags: Dispatch<SetStateAction<ReportTag[]>>
+  setReportDetailTags: Dispatch<SetStateAction<ReportDetailTag[]>>
   currentMemberId: number | null
   currentTeamId: number | null
   setCurrentMemberId: (memberId: number | null) => void
@@ -71,7 +71,7 @@ export interface MockDataContextValue {
   monthlyTags: Tag[]
   myReports: Report[]
   detailsByReportId: Record<number, ReportDetail[]>
-  reportTagsByReportId: Record<number, ReportTag[]>
+  reportDetailTagsByReportId: Record<number, ReportDetailTag[]>
   peerReportsByReportId: Record<number, PeerReport[]>
 }
 
@@ -84,7 +84,7 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
   const [reports, setReports] = useState<Report[]>([])
   const [reportDetails, setReportDetails] = useState<ReportDetail[]>([])
   const [peerReports, setPeerReports] = useState<PeerReport[]>([])
-  const [reportTags, setReportTags] = useState<ReportTag[]>([])
+  const [reportDetailTags, setReportDetailTags] = useState<ReportDetailTag[]>([])
   const [loading, setLoading] = useState(true)
   const [initialized, setInitialized] = useState(false)
   const [currentMemberIdState, setCurrentMemberIdState] = useState<number | null>(
@@ -101,7 +101,7 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
     setReports(loadFromStorage<Report[]>(STORAGE_KEYS.reports) ?? [])
     setReportDetails(loadFromStorage<ReportDetail[]>(STORAGE_KEYS.reportDetails) ?? [])
     setPeerReports(loadFromStorage<PeerReport[]>(STORAGE_KEYS.peerReports) ?? [])
-    setReportTags(loadFromStorage<ReportTag[]>(STORAGE_KEYS.reportTags) ?? [])
+    setReportDetailTags(loadFromStorage<ReportDetailTag[]>(STORAGE_KEYS.reportDetailTags) ?? [])
     setInitialized(true)
     setLoading(false)
   }, [])
@@ -117,8 +117,8 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
     saveToStorage(STORAGE_KEYS.reports, reports)
     saveToStorage(STORAGE_KEYS.reportDetails, reportDetails)
     saveToStorage(STORAGE_KEYS.peerReports, peerReports)
-    saveToStorage(STORAGE_KEYS.reportTags, reportTags)
-  }, [teams, members, tags, reports, reportDetails, peerReports, reportTags])
+    saveToStorage(STORAGE_KEYS.reportDetailTags, reportDetailTags)
+  }, [teams, members, tags, reports, reportDetails, peerReports, reportDetailTags])
 
   useEffect(() => {
     if (!initialized) return
@@ -131,7 +131,7 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
     reports,
     reportDetails,
     peerReports,
-    reportTags,
+    reportDetailTags,
     persist,
   ])
 
@@ -175,13 +175,13 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
     },
     {} as Record<number, ReportDetail[]>
   )
-  const reportTagsByReportId = reportTags.reduce(
+  const reportDetailTagsByReportId = reportDetailTags.reduce(
     (acc, rt) => {
       if (!acc[rt.reportId]) acc[rt.reportId] = []
       acc[rt.reportId].push(rt)
       return acc
     },
-    {} as Record<number, ReportTag[]>
+    {} as Record<number, ReportDetailTag[]>
   )
   const peerReportsByReportId = peerReports.reduce(
     (acc, pr) => {
@@ -201,14 +201,14 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
     reports,
     reportDetails,
     peerReports,
-    reportTags,
+    reportDetailTags,
     setTeams,
     setMembers,
     setTags,
     setReports,
     setReportDetails,
     setPeerReports,
-    setReportTags,
+    setReportDetailTags,
     currentMemberId,
     currentTeamId,
     setCurrentMemberId,
@@ -220,7 +220,7 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
     monthlyTags,
     myReports,
     detailsByReportId,
-    reportTagsByReportId,
+    reportDetailTagsByReportId,
     peerReportsByReportId,
   }
 

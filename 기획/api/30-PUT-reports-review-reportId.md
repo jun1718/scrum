@@ -16,11 +16,11 @@
 ### Request Body
 ```json
 {
-  "reportTags": [
+  "reportDetailTags": [
     {
-      "reportTagId": 4000000000020,
+      "reportDetailTagId": 4000000000020,
       "tagId": 1234567890001,
-      "aiSummaryContent": "프로젝트A에서 백엔드 핵심 기능을 주도적으로 개발하고, 보고서 자동 생성 파이프라인을 구축하여 수작업 공수를 80% 절감함."
+      "aiSummary": "프로젝트A에서 백엔드 핵심 기능을 주도적으로 개발하고, 보고서 자동 생성 파이프라인을 구축하여 수작업 공수를 80% 절감함."
     }
   ]
 }

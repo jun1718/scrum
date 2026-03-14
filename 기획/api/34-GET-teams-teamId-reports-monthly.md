@@ -28,9 +28,9 @@
     "reportId": 1000000000020,
     "staDate": "2026-03-01",
     "endDate": "2026-03-25",
-    "reportTags": [
+    "reportDetailTags": [
       {
-        "reportTagId": 4000000000010,
+        "reportDetailTagId": 4000000000010,
         "tagId": 1234567890001,
         "tagName": "프로젝트A",
         "totalWorkHours": 120.0,

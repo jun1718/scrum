@@ -41,9 +41,9 @@
         "performance": "JWT 인증 구현 완료"
       }
     ],
-    "reportTags": [
+    "reportDetailTags": [
       {
-        "reportTagId": 4000000000001,
+        "reportDetailTagId": 4000000000001,
         "tagId": 1234567890001,
         "tagName": "프로젝트A",
         "totalWorkHours": 30.0,

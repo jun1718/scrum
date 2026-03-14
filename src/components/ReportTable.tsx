@@ -1,10 +1,11 @@
-import type { Report, ReportDetail, ReportTag } from '@/types'
+import { useState } from 'react'
+import type { Report, ReportDetail, ReportDetailTag, Tag } from '@/types'
 import { calcWorkRate, sumWorkHours } from '@/utils/calc'
 
 interface ReportTableProps {
   reports: Report[]
   getDetails: (reportId: number) => ReportDetail[]
-  getReportTags?: (reportId: number) => ReportTag[]
+  getReportDetailTags?: (reportId: number) => ReportDetailTag[]
   showAiSummary?: boolean
   onEdit?: (report: Report) => void
   onDelete?: (report: Report) => void
@@ -12,12 +13,13 @@ interface ReportTableProps {
   onReportClick?: (report: Report) => void
   onView?: (report: Report) => void
   onPeerReport?: (report: Report) => void
+  tags?: Tag[]
 }
 
 export function ReportTable({
   reports,
   getDetails,
-  getReportTags = () => [],
+  getReportDetailTags = () => [],
   showAiSummary = false,
   onEdit,
   onDelete,
@@ -25,7 +27,12 @@ export function ReportTable({
   onReportClick,
   onView,
   onPeerReport,
+  tags = [],
 }: ReportTableProps) {
+  const [expandedTag, setExpandedTag] = useState<{ reportId: number; tagId: number } | null>(null)
+
+  const getTagName = (tagId: number) => tags.find((t) => t.tagId === tagId)?.tagName ?? `태그#${tagId}`
+
   const sorted = [...reports].sort(
     (a, b) => new Date(b.staDate).getTime() - new Date(a.staDate).getTime()
   )
@@ -33,6 +40,116 @@ export function ReportTable({
   if (sorted.length === 0) {
     return (
       <div className="text-center py-12 text-gray-400">아직 보고가 없습니다.</div>
+    )
+  }
+
+  /* ── 성과보고: report_detail_tag 기반 테이블 ── */
+  if (type === 'review') {
+    return (
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200 select-none">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border-r border-gray-300">시작일</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border-r border-gray-300">종료일</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border-r border-gray-300">월간태그명</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border-r border-gray-300">투입시간</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border-r border-gray-300">투입률(%)</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border-r border-gray-300">AI 요약</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">관리</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-100">
+            {sorted.map((report) => {
+              const rTags = getReportDetailTags(report.reportId)
+              const totalTagHours = rTags.reduce((sum, rt) => sum + rt.workHours, 0)
+              const rowCount = Math.max(1, rTags.length)
+              const details = getDetails(report.reportId)
+
+              return rTags.length === 0 ? (
+                <tr key={report.reportId}>
+                  <td className="px-4 py-3 text-sm text-gray-700">{report.staDate}</td>
+                  <td className="px-4 py-3 text-sm text-gray-700">{report.endDate}</td>
+                  <td className="px-4 py-3 text-sm text-gray-400" colSpan={4}>—</td>
+                  <td className="px-3 py-2">
+                    {onDelete && (
+                      <button type="button" onClick={() => onDelete(report)} className="px-2 py-1 rounded border border-red-200 text-xs text-red-600 bg-red-50 hover:bg-red-100">삭제</button>
+                    )}
+                  </td>
+                </tr>
+              ) : (
+                rTags.map((rt, idx) => {
+                  const tagRate = totalTagHours > 0 ? Math.round((rt.workHours / totalTagHours) * 100) : 0
+                  const isExpanded = expandedTag?.reportId === report.reportId && expandedTag?.tagId === rt.tagId
+                  const tagDetails = details.filter((d) => d.tagId === rt.tagId)
+
+                  return (
+                    <tr key={`${report.reportId}-${rt.reportDetailTagId}`}>
+                      {idx === 0 && (
+                        <>
+                          <td rowSpan={rowCount} className="px-4 py-3 text-sm text-gray-700 align-top border-r border-gray-100">{report.staDate}</td>
+                          <td rowSpan={rowCount} className="px-4 py-3 text-sm text-gray-700 align-top border-r border-gray-100">{report.endDate}</td>
+                        </>
+                      )}
+                      <td className="px-4 py-3 text-sm border-r border-gray-200">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-gray-900">{getTagName(rt.tagId)}</span>
+                          <button
+                            type="button"
+                            onClick={() => setExpandedTag(isExpanded ? null : { reportId: report.reportId, tagId: rt.tagId })}
+                            className="px-2 py-0.5 rounded border border-blue-200 text-xs text-blue-600 bg-blue-50 hover:bg-blue-100"
+                          >
+                            {isExpanded ? '접기' : '상세보기'}
+                          </button>
+                        </div>
+                        {isExpanded && (
+                          <div className="mt-3 border-t pt-2">
+                            <p className="text-xs text-gray-400 mb-2">이 태그의 업무별 AI 요약과 어필할 성과를 합쳐 태그별 AI 요약이 생성되었습니다.</p>
+                            <table className="w-full text-xs border border-gray-200 rounded">
+                              <thead className="bg-gray-50">
+                                <tr>
+                                  <th className="px-2 py-1 text-left border-r">업무명</th>
+                                  <th className="px-2 py-1 text-left border-r">한 일</th>
+                                  <th className="px-2 py-1 text-left border-r">업무별 AI 요약</th>
+                                  <th className="px-2 py-1 text-left">어필할 성과</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {tagDetails.map((d) => (
+                                  <tr key={d.reportDetailId} className="border-t border-gray-100">
+                                    <td className="px-2 py-1 border-r">
+                                      {d.taskLink && d.taskLink !== '#' ? (
+                                        <a href={d.taskLink} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{d.taskTitle}</a>
+                                      ) : d.taskTitle}
+                                    </td>
+                                    <td className="px-2 py-1 border-r whitespace-pre-line">{d.done}</td>
+                                    <td className="px-2 py-1 border-r whitespace-pre-line">{d.aiSummary || '—'}</td>
+                                    <td className="px-2 py-1 whitespace-pre-line">{d.performance || '—'}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-700 border-r border-gray-200">{rt.workHours}h</td>
+                      <td className="px-4 py-3 text-sm text-gray-700 border-r border-gray-200">{tagRate}%</td>
+                      <td className="px-4 py-3 text-sm text-gray-600 max-w-xs border-r border-gray-200 whitespace-pre-line">{rt.aiSummary || '—'}</td>
+                      {idx === 0 && (
+                        <td rowSpan={rowCount} className="px-3 py-2 align-middle">
+                          {onDelete && (
+                            <button type="button" onClick={() => onDelete(report)} className="px-2 py-1 rounded border border-red-200 text-xs text-red-600 bg-red-50 hover:bg-red-100">삭제</button>
+                          )}
+                        </td>
+                      )}
+                    </tr>
+                  )
+                })
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
     )
   }
 
@@ -83,7 +200,7 @@ export function ReportTable({
                 </th>
               </>
             )}
-            {(type === 'weekly' || type === 'monthly' || type === 'review') && (
+            {(type === 'weekly' || type === 'monthly') && (
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border-r border-gray-300">
                 태그별 투입시간
               </th>
@@ -101,7 +218,7 @@ export function ReportTable({
         <tbody className="bg-white divide-y divide-gray-100">
           {sorted.map((report) => {
             const details = getDetails(report.reportId)
-            const reportTags = getReportTags(report.reportId)
+            const reportDetailTags = getReportDetailTags(report.reportId)
             const rowCount = Math.max(1, details.length)
             const totalHours = type === 'daily' ? sumWorkHours(details) : 0
             return details.length === 0 ? (
@@ -128,7 +245,7 @@ export function ReportTable({
                     <td className="px-4 py-3 text-sm text-gray-400 border-r border-gray-200">—</td>
                   </>
                 )}
-                {(type === 'weekly' || type === 'monthly' || type === 'review') && (
+                {(type === 'weekly' || type === 'monthly') && (
                   <td className="px-4 py-3 text-sm">—</td>
                 )}
                 {showAiSummary && <td className="px-4 py-3 text-sm">—</td>}
@@ -229,20 +346,20 @@ export function ReportTable({
                       </td>
                     </>
                   )}
-                  {(type === 'weekly' || type === 'monthly' || type === 'review') && idx === 0 && (
+                  {(type === 'weekly' || type === 'monthly') && idx === 0 && (
                     <td rowSpan={rowCount} className="px-4 py-3 text-sm align-top border-r border-gray-100">
                       <ul className="space-y-1">
-                        {reportTags.map((rt) => (
-                          <li key={rt.reportTagId}>태그#{rt.tagId}: {rt.workHours}h</li>
+                        {reportDetailTags.map((rt) => (
+                          <li key={rt.reportDetailTagId}>태그#{rt.tagId}: {rt.workHours}h</li>
                         ))}
                       </ul>
                     </td>
                   )}
                   {showAiSummary && idx === 0 && (
                     <td rowSpan={rowCount} className="px-4 py-3 text-sm text-gray-600 max-w-xs align-top border-r border-gray-100">
-                      {reportTags.map((rt) =>
-                        rt.aiSummaryContent ? (
-                          <div key={rt.reportTagId} className="mb-2">{rt.aiSummaryContent}</div>
+                      {reportDetailTags.map((rt) =>
+                        rt.aiSummary ? (
+                          <div key={rt.reportDetailTagId} className="mb-2">{rt.aiSummary}</div>
                         ) : null
                       )}
                     </td>

@@ -16,11 +16,11 @@
 ### Request Body
 ```json
 {
-  "reportTags": [
+  "reportDetailTags": [
     {
-      "reportTagId": 4000000000010,
+      "reportDetailTagId": 4000000000010,
       "tagId": 1234567890001,
-      "aiSummaryContent": "프로젝트A에서 JWT 인증 및 API 설계를 완료하고, 코드 리뷰를 통해 품질을 개선함."
+      "aiSummary": "프로젝트A에서 JWT 인증 및 API 설계를 완료하고, 코드 리뷰를 통해 품질을 개선함."
     }
   ]
 }

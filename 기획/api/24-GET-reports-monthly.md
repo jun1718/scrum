@@ -1,7 +1,7 @@
 # GET /api/reports/monthly
 
 ## 설명
-월간 보고 목록을 조회한다. 응답에 reportTag.aiSummaryContent가 포함된다.
+월간 보고 목록을 조회한다. 응답에 reportDetailTag.aiSummary가 포함된다.
 
 ## 요청
 - **Method**: GET
@@ -29,14 +29,14 @@
     "reportType": "MONTHLY",
     "staDate": "2026-03-01",
     "endDate": "2026-03-25",
-    "reportTags": [
+    "reportDetailTags": [
       {
-        "reportTagId": 4000000000010,
+        "reportDetailTagId": 4000000000010,
         "tagId": 1234567890001,
         "tagName": "프로젝트A",
         "totalWorkHours": 120.0,
         "workRatio": 60.0,
-        "aiSummaryContent": "프로젝트A에서 JWT 인증 구현, API 설계 및 코드 리뷰를 수행하여 백엔드 핵심 기능 개발을 완료함."
+        "aiSummary": "프로젝트A에서 JWT 인증 구현, API 설계 및 코드 리뷰를 수행하여 백엔드 핵심 기능 개발을 완료함."
       }
     ]
   }

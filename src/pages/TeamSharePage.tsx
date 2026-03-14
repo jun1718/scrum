@@ -18,7 +18,7 @@ export function TeamSharePage() {
 
   const {
     reports,
-    reportTagsByReportId,
+    reportDetailTagsByReportId,
     detailsByReportId,
     members,
     currentTeamId,
@@ -221,6 +221,9 @@ export function TeamSharePage() {
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                       태그별 투입
                     </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      AI 요약
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-100">
@@ -229,7 +232,7 @@ export function TeamSharePage() {
                     return memberReports.length === 0 ? (
                       <tr key={member.memberId}>
                         <td className="px-4 py-3 text-sm font-medium">{member.memberName}</td>
-                        <td colSpan={4} className="px-4 py-3 text-sm text-gray-400">
+                        <td colSpan={5} className="px-4 py-3 text-sm text-gray-400">
                           보고 없음
                         </td>
                       </tr>
@@ -237,7 +240,7 @@ export function TeamSharePage() {
                       memberReports.map((report) => {
                         const details = detailsByReportId[report.reportId] ?? []
                         const totalHours = sumWorkHours(details)
-                        const reportTags = reportTagsByReportId[report.reportId] ?? []
+                        const reportDetailTags = reportDetailTagsByReportId[report.reportId] ?? []
                         return (
                           <tr key={report.reportId}>
                             <td className="px-4 py-3 text-sm font-medium">
@@ -260,11 +263,18 @@ export function TeamSharePage() {
                               </ul>
                             </td>
                             <td className="px-4 py-3 text-sm">
-                              {reportTags.map((rt) => (
-                                <span key={rt.reportTagId} className="mr-2">
+                              {reportDetailTags.map((rt) => (
+                                <span key={rt.reportDetailTagId} className="mr-2">
                                   {rt.workHours}h
                                 </span>
                               ))}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-600 max-w-xs whitespace-pre-line">
+                              {details.map((d) =>
+                                d.aiSummary ? (
+                                  <div key={d.reportDetailId} className="mb-1 text-xs">{d.taskTitle}: {d.aiSummary}</div>
+                                ) : null
+                              )}
                             </td>
                           </tr>
                         )
