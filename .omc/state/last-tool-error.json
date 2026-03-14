@@ -1,7 +1,7 @@
 {
   "tool_name": "Bash",
-  "tool_input_preview": "{\"command\":\"npm run build 2>&1\",\"timeout\":60000,\"description\":\"Run TypeScript build to check for type errors\"}",
-  "error": "Exit code 1\n\n> daily-scrum@0.0.0 build\n> tsc -b && vite build\n\nsrc/components/ReportTable.tsx(203,58): error TS2367: This comparison appears to be unintentional because the types '\"daily\"' and '\"review\"' have no overlap.\nsrc/components/ReportTable.tsx(248,62): error TS2367: This comparison appears to be unintentional because the types '\"daily\"' and '\"review\"' have no overlap.\nsrc/components/ReportTable.tsx(349,64): error TS2367: This comparison appears to be unintentional because the types '\"dai...",
-  "timestamp": "2026-03-14T02:11:07.457Z",
+  "tool_input_preview": "{\"command\":\"ls /Users/nhn/IdeaProjects/daily-scrum/기획/2*.md 2>/dev/null\",\"description\":\"Check existing 기획 docs numbered 20+\"}",
+  "error": "Exit code 1\n(eval):1: no matches found: /Users/nhn/IdeaProjects/daily-scrum/기�\\M-^Z\\M-^M/2*.md",
+  "timestamp": "2026-03-14T04:24:50.960Z",
   "retry_count": 1
 }

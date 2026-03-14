@@ -3,6 +3,7 @@ import { NavLink, useParams } from 'react-router-dom'
 import { useMockData } from '@/hooks/useMockData'
 import { ReportTable } from '@/components/ReportTable'
 import { ReviewCreateModal } from '@/components/ReviewCreateModal'
+import { WeeklyCreateModal } from '@/components/WeeklyCreateModal'
 import { PeerReportModal } from '@/components/PeerReportModal'
 import { ScrumRow, type ScrumRowData } from '@/components/ScrumRow'
 import type { Report, ReportType } from '@/types'
@@ -32,6 +33,7 @@ export function ReportListPage() {
     currentMemberId: rawMemberId,
     weeklyTags,
     tags,
+    currentTeam,
   } = useMockData()
 
   const getMonthlyTagName = (weeklyTagId: number) => {
@@ -73,6 +75,7 @@ export function ReportListPage() {
   const currentMemberId = rawMemberId!
 
   const [reviewModalOpen, setReviewModalOpen] = useState(false)
+  const [weeklyModalOpen, setWeeklyModalOpen] = useState(false)
   const [viewReport, setViewReport] = useState<Report | null>(null)
   const [viewEditing, setViewEditing] = useState(false)
   const [viewRows, setViewRows] = useState<ScrumRowData[]>([])
@@ -91,7 +94,6 @@ export function ReportListPage() {
   const showAiSummary = reportType === 'weekly' || reportType === 'monthly' || reportType === 'review'
 
   const openView = (report: Report) => {
-    if (report.type !== 'daily') return
     const details = detailsByReportId[report.reportId] ?? []
     setViewRows(details.map((d) => ({
       taskId: d.taskId,
@@ -181,11 +183,20 @@ export function ReportListPage() {
       return
     }
     const monthlyDetails = monthly.flatMap((r) => detailsByReportId[r.reportId] ?? [])
-    const merged = mergeDetailsByTaskId(monthlyDetails)
+    const allMerged = mergeDetailsByTaskId(monthlyDetails)
+    if (allMerged.length === 0) {
+      alert('해당 기간의 월간 보고에 업무가 없습니다.')
+      return
+    }
+    const hasPerformance = allMerged.some((m) => m.performance)
+    if (!hasPerformance) {
+      alert('해당 기간의 월간 보고에 업무 성과가 입력된 업무가 없습니다. 성과 입력 후 다시 시도해주세요.')
+      return
+    }
 
     const newId = Math.max(0, ...allReports.map((r) => r.reportId)) + 1
     const maxDetailId = Math.max(0, ...reportDetails.map((d) => d.reportDetailId))
-    const newDetails = merged.map((m, i) => ({
+    const newDetails = allMerged.map((m, i) => ({
       reportDetailId: maxDetailId + i + 1,
       reportId: newId,
       tagId: m.tagId,
@@ -214,20 +225,25 @@ export function ReportListPage() {
     ])
     setReportDetails((prev) => [...prev, ...newDetails])
 
-    // 태그별 공수 합산 + 태그별 AI 요약 → report_detail_tag 생성
-    const tagMap = new Map<number, { workHours: number; tasks: typeof newDetails }>()
-    for (const d of newDetails) {
-      const existing = tagMap.get(d.tagId)
-      if (existing) {
-        existing.workHours += d.workHours
-        existing.tasks.push(d)
-      } else {
-        tagMap.set(d.tagId, { workHours: d.workHours, tasks: [d] })
-      }
+    // 월간 태그 기준 공수 합산 + 태그별 AI 요약 → report_detail_tag 생성
+    const getMonthlyTagId = (weeklyTagId: number) => {
+      const tag = tags.find((t) => t.tagId === weeklyTagId)
+      if (!tag) return weeklyTagId
+      if (!tag.parentTagId) return tag.tagId // 이미 월간 태그
+      return tag.parentTagId
     }
+    // 투입시간: 월간 보고 전체 업무(performance 유무 무관) 기준으로 월간 태그별 합산
+    const tagWorkHoursMap = new Map<number, number>()
+    for (const d of allMerged) {
+      const monthlyTagId = getMonthlyTagId(d.tagId)
+      tagWorkHoursMap.set(monthlyTagId, (tagWorkHoursMap.get(monthlyTagId) ?? 0) + d.workHours)
+    }
+    // 전체 업무의 월간 태그 → reportDetailTag 생성
+    const allTagIds = new Set<number>(newDetails.map((d) => getMonthlyTagId(d.tagId)))
     setReportDetailTags((prev) => {
       let nextId = Math.max(0, ...prev.map((rt) => rt.reportDetailTagId)) + 1
-      const newTags = Array.from(tagMap.entries()).map(([tagId, { workHours }]) => {
+      const newTags = Array.from(allTagIds).map((tagId) => {
+        const workHours = tagWorkHoursMap.get(tagId) ?? 0
         const tagName = tags.find((t) => t.tagId === tagId)?.tagName ?? `태그#${tagId}`
         return {
           reportDetailTagId: nextId++,
@@ -248,17 +264,18 @@ export function ReportListPage() {
     .filter((r) => r.type === 'review')
     .map((r) => ({ staDate: r.staDate, endDate: r.endDate }))
 
-  const handleCreateWeekly = () => {
-    const daily = myReports.filter((r) => r.type === 'daily')
+  const existingWeeklyRanges = myReports
+    .filter((r) => r.type === 'weekly')
+    .map((r) => ({ staDate: r.staDate, endDate: r.endDate }))
+
+  const handleCreateWeekly = (staDate: string, endDate: string) => {
+    const daily = myReports.filter(
+      (r) => r.type === 'daily' && r.staDate >= staDate && r.staDate <= endDate
+    )
     if (daily.length === 0) {
-      alert('생성할 데일리 보고가 없습니다.')
+      alert('해당 기간에 데일리 보고가 없습니다.')
       return
     }
-    const sortedDaily = [...daily].sort(
-      (a, b) => new Date(a.staDate).getTime() - new Date(b.staDate).getTime()
-    )
-    const staDate = sortedDaily[0].staDate
-    const endDate = sortedDaily[sortedDaily.length - 1].endDate
     const dailyDetails = daily.flatMap((r) => detailsByReportId[r.reportId] ?? [])
     const merged = mergeDetailsByTaskId(dailyDetails)
 
@@ -347,7 +364,7 @@ export function ReportListPage() {
         {reportType === 'weekly' && (
           <button
             type="button"
-            onClick={handleCreateWeekly}
+            onClick={() => setWeeklyModalOpen(true)}
             className="px-4 py-2 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600"
           >
             주간 보고 생성
@@ -400,6 +417,7 @@ export function ReportListPage() {
             getReportDetailTags={getReportDetailTags}
             showAiSummary={showAiSummary}
             onDelete={reportType !== 'daily' ? handleDelete : undefined}
+            onEdit={reportType !== 'daily' && reportType !== 'review' ? (report) => { openView(report); setViewEditing(true) } : undefined}
             type={reportType}
             onView={reportType === 'daily' ? openView : undefined}
             onPeerReport={reportType === 'daily' ? (report) => setPeerModalReport(report) : undefined}
@@ -407,9 +425,19 @@ export function ReportListPage() {
               setTomorrowDraft(report.tomorrowPlan ?? '')
               setTomorrowModalReport(report)
             } : undefined}
-            onPerformance={reportType === 'daily' ? (report, detail) => {
+            onPerformance={(report, detail) => {
               setPerfDraft(detail.performance ?? '')
               setPerfModalDetail({ report, detail })
+            }}
+            onAiSummaryEdit={showAiSummary ? (detail, newValue) => {
+              setReportDetails((prev) => prev.map((d) =>
+                d.reportDetailId === detail.reportDetailId ? { ...d, aiSummary: newValue } : d
+              ))
+            } : undefined}
+            onReviewTagAiSummaryEdit={reportType === 'review' ? (rt, newValue) => {
+              setReportDetailTags((prev) => prev.map((t) =>
+                t.reportDetailTagId === rt.reportDetailTagId ? { ...t, aiSummary: newValue } : t
+              ))
             } : undefined}
             tags={tags}
           />
@@ -420,6 +448,13 @@ export function ReportListPage() {
         onClose={() => setReviewModalOpen(false)}
         onCreate={handleCreateReview}
         existingRanges={existingReviewRanges}
+      />
+      <WeeklyCreateModal
+        isOpen={weeklyModalOpen}
+        onClose={() => setWeeklyModalOpen(false)}
+        onCreate={handleCreateWeekly}
+        weekStartDay={currentTeam?.weekStartDay ?? 1}
+        existingRanges={existingWeeklyRanges}
       />
       {viewReport && (
         <div className="fixed inset-0 bg-black/50 flex items-start justify-center pt-16 z-50">

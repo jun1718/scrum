@@ -183,26 +183,26 @@
   "hotPaths": [
     {
       "path": "src/components/ReportTable.tsx",
-      "accessCount": 126,
-      "lastAccessed": 1773457646219,
-      "type": "file"
-    },
-    {
-      "path": "src/pages/DailyScrumWritePage.tsx",
-      "accessCount": 93,
-      "lastAccessed": 1773458084515,
+      "accessCount": 216,
+      "lastAccessed": 1773465137023,
       "type": "file"
     },
     {
       "path": "src/pages/ReportListPage.tsx",
-      "accessCount": 88,
-      "lastAccessed": 1773458210930,
+      "accessCount": 143,
+      "lastAccessed": 1773464613190,
       "type": "file"
     },
     {
       "path": "기획/19-페이지별-기능정의서.md",
-      "accessCount": 69,
-      "lastAccessed": 1773458513747,
+      "accessCount": 112,
+      "lastAccessed": 1773464754268,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/DailyScrumWritePage.tsx",
+      "accessCount": 94,
+      "lastAccessed": 1773458678575,
       "type": "file"
     },
     {
@@ -213,32 +213,32 @@
     },
     {
       "path": "src/types/index.ts",
-      "accessCount": 17,
-      "lastAccessed": 1773455944277,
-      "type": "file"
-    },
-    {
-      "path": "src/App.tsx",
-      "accessCount": 16,
-      "lastAccessed": 1773458216523,
+      "accessCount": 22,
+      "lastAccessed": 1773465008730,
       "type": "file"
     },
     {
       "path": "src/context/MockDataProvider.tsx",
-      "accessCount": 14,
-      "lastAccessed": 1773454847998,
+      "accessCount": 21,
+      "lastAccessed": 1773463901805,
       "type": "file"
+    },
+    {
+      "path": "src/App.tsx",
+      "accessCount": 17,
+      "lastAccessed": 1773463205949,
+      "type": "file"
+    },
+    {
+      "path": "src",
+      "accessCount": 15,
+      "lastAccessed": 1773463808388,
+      "type": "directory"
     },
     {
       "path": "src/components/TagSelector.tsx",
       "accessCount": 12,
       "lastAccessed": 1773456066485,
-      "type": "directory"
-    },
-    {
-      "path": "src",
-      "accessCount": 12,
-      "lastAccessed": 1773458203153,
       "type": "directory"
     },
     {
@@ -249,8 +249,8 @@
     },
     {
       "path": "src/components/PeerReportModal.tsx",
-      "accessCount": 7,
-      "lastAccessed": 1773449694714,
+      "accessCount": 8,
+      "lastAccessed": 1773463439529,
       "type": "file"
     },
     {
@@ -314,6 +314,12 @@
       "type": "file"
     },
     {
+      "path": "src/components/Layout.tsx",
+      "accessCount": 3,
+      "lastAccessed": 1773463206001,
+      "type": "file"
+    },
+    {
       "path": "기획/api/11-GET-reports-daily.md",
       "accessCount": 2,
       "lastAccessed": 1773449706033,
@@ -335,12 +341,6 @@
       "path": "기획/api/31-DELETE-reports-review-reportId.md",
       "accessCount": 2,
       "lastAccessed": 1773452240151,
-      "type": "file"
-    },
-    {
-      "path": "src/components/Layout.tsx",
-      "accessCount": 2,
-      "lastAccessed": 1773458267624,
       "type": "file"
     },
     {

@@ -1,6 +1,6 @@
-import { useState } from 'react'
 import { useMockData } from '@/hooks/useMockData'
-import { calcWorkRate, sumWorkHours } from '@/utils/calc'
+import { useSearchParams } from 'react-router-dom'
+import { ReportTable } from '@/components/ReportTable'
 
 type ShareTab = 'daily' | 'weekly' | 'monthly'
 
@@ -11,17 +11,16 @@ const SHARE_TABS: { key: ShareTab; label: string }[] = [
 ]
 
 export function TeamSharePage() {
-  const [tab, setTab] = useState<ShareTab>(() => {
-    const params = new URLSearchParams(window.location.search)
-    return (params.get('tab') as ShareTab) || 'daily'
-  })
+  const [searchParams, setSearchParams] = useSearchParams()
+  const tab = (searchParams.get('tab') as ShareTab) || 'daily'
+  const setTab = (key: ShareTab) => setSearchParams({ tab: key })
 
   const {
     reports,
-    reportDetailTagsByReportId,
     detailsByReportId,
     members,
     currentTeamId,
+    tags,
   } = useMockData()
 
   const teamMembers = members.filter((m) => m.teamId === currentTeamId)
@@ -32,7 +31,11 @@ export function TeamSharePage() {
   const getMemberName = (memberId: number) =>
     members.find((m) => m.memberId === memberId)?.memberName ?? '알 수 없음'
 
-  /* ── 일간 보고: 날짜별 그룹 ── */
+  const getDetails = (reportId: number) => detailsByReportId[reportId] ?? []
+
+  const showAiSummary = tab === 'weekly' || tab === 'monthly'
+
+  /* ── 일간: 날짜별 → 멤버별 그룹 ── */
   const dailyByDate = (() => {
     if (tab !== 'daily') return []
     const dateMap = new Map<string, typeof teamReports>()
@@ -41,8 +44,16 @@ export function TeamSharePage() {
       list.push(r)
       dateMap.set(r.staDate, list)
     }
-    return [...dateMap.entries()]
-      .sort(([a], [b]) => b.localeCompare(a)) // 최신순
+    return [...dateMap.entries()].sort(([a], [b]) => b.localeCompare(a))
+  })()
+
+  /* ── 주간/월간: 멤버별 그룹 ── */
+  const reportsByMember = (() => {
+    if (tab === 'daily') return []
+    return teamMembers.map((m) => ({
+      member: m,
+      reports: teamReports.filter((r) => r.memberId === m.memberId),
+    })).filter((g) => g.reports.length > 0)
   })()
 
   return (
@@ -74,7 +85,6 @@ export function TeamSharePage() {
             팀을 등록하면 팀원별 보고를 볼 수 있습니다.
           </div>
         ) : tab === 'daily' ? (
-          /* ── 일간 보고 탭: 날짜별 → 팀원별 테이블 ── */
           dailyByDate.length === 0 ? (
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 text-center py-12 text-gray-400">
               아직 보고가 없습니다.
@@ -82,209 +92,49 @@ export function TeamSharePage() {
           ) : (
             <div className="space-y-6">
               {dailyByDate.map(([date, dateReports]) => (
-                <div key={date} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                  <div className="px-4 py-3 bg-gray-50 border-b">
-                    <h3 className="text-sm font-semibold text-gray-700">{date}</h3>
-                  </div>
-                  <div className="overflow-x-auto">
-                    {(() => {
-                      const nextDate = new Date(date)
-                      nextDate.setDate(nextDate.getDate() + 1)
-                      const nextDateStr = nextDate.toISOString().slice(0, 10)
-                      return (
-                    <table className="min-w-full table-fixed divide-y divide-gray-200 select-none">
-                      <colgroup>
-                        <col className="w-[8%]" />
-                        <col className="w-[6%]" />
-                        <col className="w-[18%]" />
-                        <col className="w-[6%]" />
-                        <col className="w-[30%]" />
-                        <col className="w-[32%]" />
-                      </colgroup>
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border-r border-gray-300">
-                            팀원
-                          </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase border-r border-gray-300 whitespace-nowrap">
-                            총 투입
-                          </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border-r border-gray-300">
-                            업무명
-                          </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase border-r border-gray-300 whitespace-nowrap">
-                            투입률
-                          </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border-r border-gray-300">
-                            업무 내용
-                          </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">
-                            {nextDateStr} 할 일
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-100">
-                        {dateReports.map((report) => {
-                          const details = detailsByReportId[report.reportId] ?? []
-                          const rowCount = Math.max(1, details.length)
-                          const memberName = getMemberName(report.memberId)
-                          const totalHours = sumWorkHours(details)
-
-                          return details.length === 0 ? (
-                            <tr key={report.reportId}>
-                              <td className="px-4 py-3 text-sm font-medium text-gray-700 align-middle border-r border-gray-100">
-                                {memberName}
-                              </td>
-                              <td className="px-4 py-3 text-sm text-gray-400 align-middle border-r border-gray-100">—</td>
-                              <td className="px-4 py-3 text-sm text-gray-400 align-middle border-r border-gray-200">—</td>
-                              <td className="px-4 py-3 text-sm text-gray-400 align-middle border-r border-gray-200">—</td>
-                              <td className="px-4 py-3 text-sm text-gray-400 align-middle border-r border-gray-200">—</td>
-                              <td className="px-4 py-3 text-sm text-gray-400 align-middle"></td>
-                            </tr>
-                          ) : (
-                            details.map((d, idx) => (
-                              <tr key={`${report.reportId}-${d.reportDetailId}`}>
-                                {idx === 0 && (
-                                  <>
-                                    <td
-                                      rowSpan={rowCount}
-                                      className="px-4 py-3 text-sm font-medium text-gray-700 align-middle border-r border-gray-100"
-                                    >
-                                      {memberName}
-                                    </td>
-                                    <td
-                                      rowSpan={rowCount}
-                                      className="px-4 py-3 text-sm text-gray-700 align-middle border-r border-gray-100 text-center font-medium"
-                                    >
-                                      {totalHours}h
-                                    </td>
-                                  </>
-                                )}
-                                <td className="px-4 py-3 text-sm align-middle border-r border-gray-200">
-                                  {d.taskLink && d.taskLink !== '#' ? (
-                                    <a
-                                      href={d.taskLink}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="font-medium text-blue-600 hover:underline"
-                                    >
-                                      {d.taskTitle || '—'}
-                                    </a>
-                                  ) : (
-                                    <span className="font-medium text-gray-900">{d.taskTitle || '—'}</span>
-                                  )}
-                                </td>
-                                <td className="px-4 py-3 text-sm align-middle text-center border-r border-gray-200">
-                                  <span className="text-gray-700">{d.workHours}h</span>
-                                  <span className="text-gray-400 ml-1">({calcWorkRate(d.workHours, totalHours)}%)</span>
-                                </td>
-                                <td className="px-4 py-3 text-sm align-middle text-gray-700 whitespace-pre-line border-r border-gray-200">
-                                  {d.done || '—'}
-                                </td>
-                                {idx === 0 && (
-                                  <td rowSpan={rowCount} className="px-4 py-3 text-sm align-middle text-gray-700 whitespace-pre-line">
-                                    {report.tomorrowPlan || ''}
-                                  </td>
-                                )}
-                              </tr>
-                            ))
-                          )
-                        })}
-                      </tbody>
-                    </table>
-                      )
-                    })()}
+                <div key={date} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden p-4">
+                  <h3 className="text-sm font-semibold text-gray-700 mb-3 px-1">{date}</h3>
+                  <div className="space-y-4">
+                    {dateReports.map((report) => (
+                      <ReportTable
+                        key={report.reportId}
+                        reports={[report]}
+                        getDetails={getDetails}
+                        type="daily"
+                        tags={tags}
+                        hidePerformance
+                        showTomorrowPlan
+                        memberName={getMemberName(report.memberId)}
+                      />
+                    ))}
                   </div>
                 </div>
               ))}
             </div>
           )
         ) : (
-          /* ── 주간/월간 보고 탭: 기존 테이블 ── */
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      팀원
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      시작일
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      종료일
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      업무 목록 (투입률 %)
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      태그별 투입
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      AI 요약
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-100">
-                  {teamMembers.map((member) => {
-                    const memberReports = teamReports.filter((r) => r.memberId === member.memberId)
-                    return memberReports.length === 0 ? (
-                      <tr key={member.memberId}>
-                        <td className="px-4 py-3 text-sm font-medium">{member.memberName}</td>
-                        <td colSpan={5} className="px-4 py-3 text-sm text-gray-400">
-                          보고 없음
-                        </td>
-                      </tr>
-                    ) : (
-                      memberReports.map((report) => {
-                        const details = detailsByReportId[report.reportId] ?? []
-                        const totalHours = sumWorkHours(details)
-                        const reportDetailTags = reportDetailTagsByReportId[report.reportId] ?? []
-                        return (
-                          <tr key={report.reportId}>
-                            <td className="px-4 py-3 text-sm font-medium">
-                              {member.memberName}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-gray-700">
-                              {report.staDate}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-gray-700">
-                              {report.endDate}
-                            </td>
-                            <td className="px-4 py-3 text-sm">
-                              <ul className="list-disc list-inside space-y-1">
-                                {details.map((d) => (
-                                  <li key={d.reportDetailId}>
-                                    {d.taskTitle} — {d.workHours}h (
-                                    {calcWorkRate(d.workHours, totalHours)}%)
-                                  </li>
-                                ))}
-                              </ul>
-                            </td>
-                            <td className="px-4 py-3 text-sm">
-                              {reportDetailTags.map((rt) => (
-                                <span key={rt.reportDetailTagId} className="mr-2">
-                                  {rt.workHours}h
-                                </span>
-                              ))}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-gray-600 max-w-xs whitespace-pre-line">
-                              {details.map((d) =>
-                                d.aiSummary ? (
-                                  <div key={d.reportDetailId} className="mb-1 text-xs">{d.taskTitle}: {d.aiSummary}</div>
-                                ) : null
-                              )}
-                            </td>
-                          </tr>
-                        )
-                      })
-                    )
-                  })}
-                </tbody>
-              </table>
+          reportsByMember.length === 0 ? (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 text-center py-12 text-gray-400">
+              아직 보고가 없습니다.
             </div>
-          </div>
+          ) : (
+            <div className="space-y-6">
+              {reportsByMember.map(({ member, reports: memberReports }) => (
+                <div key={member.memberId} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden p-4">
+                  <ReportTable
+                    reports={memberReports}
+                    getDetails={getDetails}
+                    type={tab}
+                    tags={tags}
+                    showAiSummary={showAiSummary}
+                    hidePerformance
+                    aiSummaryLabel="한 일 요약"
+                    memberName={member.memberName}
+                  />
+                </div>
+              ))}
+            </div>
+          )
         )}
       </div>
     </div>
